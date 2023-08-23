@@ -14,13 +14,13 @@ device_ids = [0]
 
 # Train:
 batch_size = 4
-cropsize = 512
+cropsize = 256
 betas = (0.5, 0.999)
 weight_step = 1000
 gamma = 0.5
 
 # Val:
-cropsize_val = 512
+cropsize_val = 256
 batchsize_val = 2
 shuffle_val = False
 val_freq = 100
@@ -61,4 +61,4 @@ trained_epoch = 0
 
 # channel after DCT
 channel_dct = 4
-blocksize_dct = 256
+blocksize_dct = 128
