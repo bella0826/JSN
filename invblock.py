@@ -10,8 +10,8 @@ class INV_block(nn.Module):
     def __init__(self, subnet_constructor=ResidualDenseBlock_out, clamp=c.clamp, harr=True, in_1=3, in_2=3):
         super().__init__()
         if harr:
-            self.split_len1 = 4 #in_1 * 4
-            self.split_len2 = 4 #in_2 * 4
+            self.split_len1 = c.channel_dct #in_1 * 4
+            self.split_len2 = c.channel_dct #in_2 * 4
         self.clamp = clamp
         # ρ
         self.r = subnet_constructor(self.split_len1, self.split_len2)

@@ -115,8 +115,8 @@ try:
             #    forward:   #
             #################
             output = net(input_img)
-            output_steg = output.narrow(1, 0, 4 * c.channels_in)
-            output_z = output.narrow(1, 4 * c.channels_in, output.shape[1] - 4 * c.channels_in)
+            output_steg = output.narrow(1, 0, c.channel_dct * c.channels_in)
+            output_z = output.narrow(1, c.channel_dct * c.channels_in, output.shape[1] - c.channel_dct * c.channels_in)
             steg_img = dct.inverse(output_steg)
 
             #################
@@ -128,7 +128,7 @@ try:
             output_rev = torch.cat((output_steg, output_z_guass), 1)
             output_image = net(output_rev, rev=True)
 
-            secret_rev = output_image.narrow(1, 4 * c.channels_in, output_image.shape[1] - 4 * c.channels_in)
+            secret_rev = output_image.narrow(1, c.channel_dct * c.channels_in, output_image.shape[1] - c.channel_dct * c.channels_in)
             secret_rev = dct.inverse(secret_rev)
 
             #################
@@ -174,9 +174,9 @@ try:
                     # 16 is a magic number, it means numbers of channel after dct
                     # so cover_input and secret_input has 16 channels, and the size of them is 1 x 1 (gray scale image) 
                     output = net(input_img)
-                    output_steg = output.narrow(1, 0, 4 * c.channels_in)
+                    output_steg = output.narrow(1, 0, c.channel_dct * c.channels_in)
                     steg = dct.inverse(output_steg)
-                    output_z = output.narrow(1, 4 * c.channels_in, output.shape[1] - 4 * c.channels_in)
+                    output_z = output.narrow(1, c.channel_dct * c.channels_in, output.shape[1] - c.channel_dct * c.channels_in)
                     output_z = gauss_noise(output_z.shape)
 
                     #################
@@ -185,7 +185,7 @@ try:
                     output_steg = output_steg.cuda()
                     output_rev = torch.cat((output_steg, output_z), 1)
                     output_image = net(output_rev, rev=True)
-                    secret_rev = output_image.narrow(1, 4 * c.channels_in, output_image.shape[1] - 4 * c.channels_in)
+                    secret_rev = output_image.narrow(1, c.channel_dct * c.channels_in, output_image.shape[1] - c.channel_dct * c.channels_in)
                     secret_rev = dct.inverse(secret_rev)
 
                     torchvision.utils.save_image(cover, c.IMAGE_PATH_cover  + '%.5d.png' % i)

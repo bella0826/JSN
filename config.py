@@ -13,7 +13,7 @@ lamda_low_frequency = 1
 device_ids = [0]
 
 # Train:
-batch_size = 4
+batch_size = 2
 cropsize = 256
 betas = (0.5, 0.999)
 weight_step = 1000
@@ -54,9 +54,11 @@ IMAGE_PATH_secret = IMAGE_PATH + 'secret1/'
 IMAGE_PATH_steg = IMAGE_PATH + 'steg1/'
 IMAGE_PATH_secret_rev = IMAGE_PATH + 'secret-rev1/'
 
-
-
 # Load:
 suffix = 'model_checkpoint_01000_5.pt'
 tain_next = False
 trained_epoch = 0
+
+# channel after DCT
+channel_dct = 4
+blocksize_dct = 128

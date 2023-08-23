@@ -13,7 +13,7 @@ class Dct2d(nn.Module):
     """
     Blockwhise 2D DCT
     """
-    def __init__(self, blocksize=128, interleaving=False):
+    def __init__(self, blocksize=c.blocksize_dct, interleaving=False):
         """
         Parameters:
         blocksize: int, size of the Blocks for discrete cosine transform 
@@ -71,7 +71,7 @@ class Dct2d(nn.Module):
         
         return coeff
     
-    def inverse(self, coeff, output_shape = (256, 256)):
+    def inverse(self, coeff, output_shape = (c.cropsize, c.cropsize)):
         """
         performs 2D blockwhise iDCT
         
@@ -93,16 +93,16 @@ class Dct2d(nn.Module):
         x = F.fold(x, output_size=(output_shape[-2], output_shape[-1]), kernel_size=self.blocksize, padding=0, stride=self.blocksize)
         return x
     
-'''if __name__ == "__main__":
+if __name__ == "__main__":
     DCT = Dct2d()
     for i, data in enumerate(datasets.testloader):
         data = data.to(device)
         print(data.device)
         coeff = DCT(data)
         print(coeff.shape)
-        img = DCT.inverse(coeff)
+        #img = DCT.inverse(coeff)
         torchvision.utils.save_image(data, 'hii.png')
-        torchvision.utils.save_image(img, 'hi.png')
+        #torchvision.utils.save_image(img, 'hi.png')
         if i == 0:
             break
-'''
+
