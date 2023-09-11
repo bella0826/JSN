@@ -151,7 +151,7 @@ try:
         epoch_losses[1] = np.log10(optim.param_groups[0]['lr'])
 
         #################
-        #     val:    #
+        #     val:      #
         #################
         if i_epoch % c.val_freq == 0:
             with torch.no_grad():

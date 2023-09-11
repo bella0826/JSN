@@ -25,6 +25,9 @@ class Hinet(nn.Module):
         self.inv15 = INV_block()
         self.inv16 = INV_block()
 
+        self.inv17 = INV_block()
+        self.inv18 = INV_block()
+
     def forward(self, x, rev=False):
 
         if not rev:
@@ -46,8 +49,14 @@ class Hinet(nn.Module):
             out = self.inv15(out)
             out = self.inv16(out)
 
+            out = self.inv17(out)
+            out = self.inv18(out)
+
         else:
-            out = self.inv16(x, rev=True)
+            out = self.inv17(x, rev=True)
+            out = self.inv18(out, rev=True)
+
+            out = self.inv16(out, rev=True)
             out = self.inv15(out, rev=True)
             out = self.inv14(out, rev=True)
             out = self.inv13(out, rev=True)
