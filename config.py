@@ -7,9 +7,9 @@ epochs = 1000
 weight_decay = 1e-5
 init_scale = 0.01
 
-lamda_reconstruction = 5
+lamda_reconstruction = 4
 lamda_guide = 1         
-lamda_low_frequency = 1
+lamda_low_frequency = 2
 device_ids = [0]
 
 # Train:
@@ -55,7 +55,7 @@ IMAGE_PATH_steg = IMAGE_PATH + 'steg1/'
 IMAGE_PATH_secret_rev = IMAGE_PATH + 'secret-rev1/'
 
 # Load:
-suffix = 'model_checkpoint_00300.pt'
+suffix = 'model_checkpoint_00200_0.pt'
 tain_next = False
 trained_epoch = 0
 
