@@ -1,7 +1,7 @@
 # Super parameters
 clamp = 2.0
 channels_in = 1
-log10_lr = -5.2
+log10_lr = -5.5
 lr = 10 ** log10_lr
 epochs = 1000
 weight_decay = 1e-5
