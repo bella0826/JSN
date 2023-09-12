@@ -56,7 +56,7 @@ IMAGE_PATH_secret_rev = IMAGE_PATH + 'secret-rev1/'
 
 # Load:
 suffix = 'model_checkpoint_00200_0.pt'
-tain_next = False
+tain_next = True
 trained_epoch = 0
 
 # channel after DCT
