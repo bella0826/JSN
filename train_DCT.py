@@ -38,11 +38,15 @@ def reconstruction_loss(rev_input, input):
     return loss.to(device)
 
 
-def low_frequency_loss(ll_input, gt_input):
+'''def low_frequency_loss(ll_input, gt_input):
     loss_fn = torch.nn.MSELoss(reduce=True, size_average=False)
     loss = loss_fn(ll_input, gt_input)
     return loss.to(device)
-
+'''
+def DC_coefficient_loss(steg_DC, cover_DC):
+    loss_fn = torch.nn.MSELoss(reduce=True, size_average=False)
+    loss = loss_fn(steg_DC, cover_DC)
+    return loss.to(device)
 
 # 网络参数数量
 def get_parameter_number(net):
@@ -136,9 +140,13 @@ try:
             #################
             g_loss = guide_loss(steg_img.cuda(), cover.cuda())
             r_loss = reconstruction_loss(secret_rev, secret)
-            steg_low = output_steg.narrow(1, 0, c.channels_in)
+            '''steg_low = output_steg.narrow(1, 0, c.channels_in)
             cover_low = cover_input.narrow(1, 0, c.channels_in)
-            l_loss = low_frequency_loss(steg_low, cover_low)
+            l_loss = low_frequency_loss(steg_low, cover_low)'''
+            steg_DC = output_steg[:, :, 0, 0]
+            cover_DC = cover_input[:, :, 0, 0]
+            l_loss = DC_coefficient_loss(steg_DC, cover_DC)
+
 
             total_loss = c.lamda_reconstruction * r_loss + c.lamda_guide * g_loss + c.lamda_low_frequency * l_loss
             total_loss.backward()

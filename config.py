@@ -1,14 +1,14 @@
 # Super parameters
 clamp = 2.0
 channels_in = 1
-log10_lr = -5.5
+log10_lr = -5.2
 lr = 10 ** log10_lr
 epochs = 1000
 weight_decay = 1e-5
 init_scale = 0.01
 
-lamda_reconstruction = 4
-lamda_guide = 2         
+lamda_reconstruction = 5
+lamda_guide = 1         
 lamda_low_frequency = 1
 device_ids = [0]
 
@@ -56,7 +56,7 @@ IMAGE_PATH_secret_rev = IMAGE_PATH + 'secret-rev1/'
 
 # Load:
 suffix = 'model_checkpoint_00300.pt'
-tain_next = True
+tain_next = False
 trained_epoch = 0
 
 # channel after DCT
