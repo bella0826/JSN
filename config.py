@@ -7,9 +7,9 @@ epochs = 1000
 weight_decay = 1e-5
 init_scale = 0.01
 
-lamda_reconstruction = 4
+lamda_reconstruction = 5
 lamda_guide = 1         
-lamda_low_frequency = 2
+lamda_low_frequency = 1
 device_ids = [0]
 
 # Train:
