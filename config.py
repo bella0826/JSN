@@ -1,7 +1,7 @@
 # Super parameters
 clamp = 2.0
 channels_in = 1
-log10_lr = -5.5
+log10_lr = -4.5
 lr = 10 ** log10_lr
 epochs = 1000
 weight_decay = 1e-5
@@ -56,7 +56,7 @@ IMAGE_PATH_secret_rev = IMAGE_PATH + 'secret-rev1/'
 
 # Load:
 suffix = 'model_checkpoint_00200_0.pt'
-tain_next = True
+tain_next = False
 trained_epoch = 0
 
 # channel after DCT
