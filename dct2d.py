@@ -9,17 +9,18 @@ import torchvision
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(device)
 
+
 class Dct2d(nn.Module):
     """
-    Blockwhise 2D DCT
+    Blockwise 2D Haar-like DCT
     """
     def __init__(self, blocksize=c.blocksize_dct, interleaving=False):
         """
         Parameters:
-        blocksize: int, size of the Blocks for discrete cosine transform 
+        blocksize: int, size of the blocks for discrete cosine transform 
         interleaving: bool, should the blocks interleave?
         """
-        super().__init__() # call super constructor
+        super().__init__()  # Call the super constructor
         
         self.blocksize = blocksize
         self.interleaving = interleaving
@@ -29,23 +30,29 @@ class Dct2d(nn.Module):
         else:
             self.stride = self.blocksize
         
-        # precompute DCT weight matrix
+        # Precompute Haar-like DCT weight matrix
+        '''A = np.zeros((blocksize, blocksize))
+        for i in range(blocksize // 2):
+            A[i, 2 * i] = 1
+            A[i, 2 * i + 1] = 1
+            A[blocksize // 2 + i, 2 * i] = 1
+            A[blocksize // 2 + i, 2 * i + 1] = -1
+        '''
         A = np.zeros((blocksize,blocksize))
         for i in range(blocksize):
             c_i = 1/np.sqrt(2) if i == 0 else 1.
             for n in range(blocksize):
                 A[i,n] = np.sqrt(2/blocksize) * c_i * np.cos((2*n+ 1)/(blocksize*2) * i * np.pi)
-        
         # set up conv layer
         self.A = nn.Parameter(torch.tensor(A, dtype=torch.float32, device=device), requires_grad=False)
         self.unfold = torch.nn.Unfold(kernel_size=blocksize, padding=0, stride=self.stride)
         #self.A = self.A.to(device)
-        
+
         return
         
     def forward(self, x):
         """
-        performs 2D blockwhise DCT
+        Performs 2D blockwise Haar-like DCT
         
         Parameters:
         x: tensor of dimension (N, 1, h, w)
@@ -62,18 +69,18 @@ class Dct2d(nn.Module):
         # unfold to blocks
         x = self.unfold(x)
 
-        # now shape (N, blocksize**2, k)
+        # Now shape (N, blocksize**2, k)
         (N, _, k) = x.shape
-        x = x.view(-1,self.blocksize,self.blocksize,k).permute(0,3,1,2)
-        # now shape (N, #k, blocksize, blocksize)
-        # perform DCT
-        coeff = self.A.matmul(x).matmul(self.A.transpose(0,1))
+        x = x.view(-1, self.blocksize, self.blocksize, k).permute(0, 3, 1, 2)
+        
+        # Perform Haar-like DCT
+        coeff = self.A.matmul(x).matmul(self.A.transpose(0, 1))
         
         return coeff
     
-    def inverse(self, coeff, output_shape = (c.cropsize, c.cropsize)):
+    def inverse(self, coeff, output_shape=(c.cropsize, c.cropsize)):
         """
-        performs 2D blockwhise iDCT
+        Performs 2D blockwise inverse Haar-like DCT
         
         Parameters:
         coeff: tensor of dimension (N, k, blocksize, blocksize)
@@ -85,11 +92,12 @@ class Dct2d(nn.Module):
         """
         if self.interleaving:
             raise Exception('Inverse block DCT is not implemented for interleaving blocks!')
-            
-        # perform iDCT
-        x = self.A.transpose(0,1).matmul(coeff).matmul(self.A)
+
+        # Perform inverse Haar-like DCT
+        x = self.A.transpose(0, 1).matmul(coeff).matmul(self.A)
         (N, k, _, _) = x.shape
-        x = x.permute(0,2,3,1).view(-1, self.blocksize**2, k)
+        
+        x = x.permute(0, 2, 3, 1).view(-1, self.blocksize**2, k)
         x = F.fold(x, output_size=(output_shape[-2], output_shape[-1]), kernel_size=self.blocksize, padding=0, stride=self.blocksize)
         return x
     
@@ -97,12 +105,12 @@ if __name__ == "__main__":
     DCT = Dct2d()
     for i, data in enumerate(datasets.testloader):
         data = data.to(device)
-        print(data.device)
+        #print(data.device)
         coeff = DCT(data)
         print(coeff.shape)
-        #img = DCT.inverse(coeff)
-        torchvision.utils.save_image(data, 'hii.png')
-        #torchvision.utils.save_image(img, 'hi.png')
+        img = DCT.inverse(coeff)
+        torchvision.utils.save_image(coeff, 'hii.png')
+        torchvision.utils.save_image(img, 'hi.png')
         if i == 0:
             break
 

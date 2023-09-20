@@ -87,14 +87,14 @@ para = get_parameter_number(net)
 print(para)
 params_trainable = (list(filter(lambda p: p.requires_grad, net.parameters())))
 
-optim = torch.optim.Adam(params_trainable, lr=c.lr, betas=c.betas, eps=1e-6, weight_decay=c.weight_decay)
+optim = torch.optim.AdamW(params_trainable, lr=c.lr, betas=c.betas, eps=1e-6, weight_decay=c.weight_decay)
 weight_scheduler = torch.optim.lr_scheduler.StepLR(optim, c.weight_step, gamma=c.gamma)
 
 dct = Dct2d()
 
 if c.tain_next:
     load(c.MODEL_PATH + c.suffix)
-optim = torch.optim.Adam(params_trainable, lr=c.lr, betas=c.betas, eps=1e-6, weight_decay=c.weight_decay)
+optim = torch.optim.AdamW(params_trainable, lr=c.lr, betas=c.betas, eps=1e-6, weight_decay=c.weight_decay)
 try:
     writer = SummaryWriter(comment='hinet', filename_suffix="steg")
 
