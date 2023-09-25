@@ -73,7 +73,7 @@ testloader = DataLoader(
     batch_size=c.batchsize_val,
     shuffle=False,
     pin_memory=True,
-    num_workers=1,
+    num_workers=0,
     drop_last=True
 )
 
@@ -82,6 +82,6 @@ backwardloader = DataLoader(
     batch_size=1,
     shuffle=False,
     pin_memory=True,
-    num_workers=1,
+    num_workers=0,
     drop_last=True
 )

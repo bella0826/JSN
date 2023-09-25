@@ -44,7 +44,7 @@ def reconstruction_loss(rev_input, input):
     return loss.to(device)
 '''
 def DC_coefficient_loss(steg_DC, cover_DC):
-    loss_fn = torch.nn.MSELoss(reduce=True, size_average=False)
+    loss_fn = torch.nn.L1Loss(reduce=True, size_average=False)
     loss = loss_fn(steg_DC, cover_DC)
     return loss.to(device)
 
@@ -126,7 +126,7 @@ try:
             #################
             #   backward:   #
             #################
-
+            # what if I am not using random guassian noise of output_z instead of directly using output_z
             output_z_guass = gauss_noise(output_z.shape)
 
             output_rev = torch.cat((output_steg, output_z_guass), 1)
@@ -143,10 +143,11 @@ try:
             '''steg_low = output_steg.narrow(1, 0, c.channels_in)
             cover_low = cover_input.narrow(1, 0, c.channels_in)
             l_loss = low_frequency_loss(steg_low, cover_low)'''
-            steg_DC = output_steg[:, :, 0, 0]
-            cover_DC = cover_input[:, :, 0, 0]
+            N, k, blocksize, blocksize = output_steg.shape
+            steg_DC = output_steg[:, :, blocksize // 2, blocksize // 2]
+            N, k, blocksize, blocksize = cover_input.shape
+            cover_DC = cover_input[:, :, blocksize // 2, blocksize // 2]
             l_loss = DC_coefficient_loss(steg_DC, cover_DC)
-
 
             total_loss = c.lamda_reconstruction * r_loss + c.lamda_guide * g_loss + c.lamda_low_frequency * l_loss
             total_loss.backward()
