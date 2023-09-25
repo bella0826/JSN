@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import torch
-import torchvision
 import torch.nn
 import torch.optim
 import math
@@ -91,8 +90,6 @@ iwt = common.IWT()
 if c.tain_next:
     load(c.MODEL_PATH + c.suffix)
 
-optim = torch.optim.Adam(params_trainable, lr=c.lr, betas=c.betas, eps=1e-6, weight_decay=c.weight_decay)
-
 try:
     writer = SummaryWriter(comment='hinet', filename_suffix="steg")
 
@@ -106,15 +103,10 @@ try:
 
         for i_batch, data in enumerate(datasets.trainloader):
             data = data.to(device)
-            aa = data[data.shape[0] // 2:]
-            print(aa.shape)
-            #cover = data[data.shape[0] // 2:]
-            #secret = data[:data.shape[0] // 2]
-            cover_input = data[data.shape[0] // 2:]
-            secret_input = data[:data.shape[0] // 2]
-            
-            #cover_input = dwt(cover)
-            #secret_input = dwt(secret)
+            cover = data[data.shape[0] // 2:]
+            secret = data[:data.shape[0] // 2]
+            cover_input = dwt(cover)
+            secret_input = dwt(secret)
 
             input_img = torch.cat((cover_input, secret_input), 1)
 
@@ -122,11 +114,9 @@ try:
             #    forward:   #
             #################
             output = net(input_img)
-            #output_steg = output.narrow(1, 0, 4 * c.channels_in)
-            output_steg = output.narrow(1, 0, c.channels_in)
-            #output_z = output.narrow(1, 4 * c.channels_in, output.shape[1] - 4 * c.channels_in)
-            output_z = output.narrow(1, c.channels_in, output.shape[1] - c.channels_in)
-            #steg_img = iwt(output_steg)
+            output_steg = output.narrow(1, 0, 4 * c.channels_in)
+            output_z = output.narrow(1, 4 * c.channels_in, output.shape[1] - 4 * c.channels_in)
+            steg_img = iwt(output_steg)
 
             #################
             #   backward:   #
@@ -137,16 +127,14 @@ try:
             output_rev = torch.cat((output_steg, output_z_guass), 1)
             output_image = net(output_rev, rev=True)
 
-            #secret_rev = output_image.narrow(1, 4 * c.channels_in, output_image.shape[1] - 4 * c.channels_in)
-            secret_rev = output_image.narrow(1, c.channels_in, output_image.shape[1] - c.channels_in)
-            #secret_rev = iwt(secret_rev)
+            secret_rev = output_image.narrow(1, 4 * c.channels_in, output_image.shape[1] - 4 * c.channels_in)
+            secret_rev = iwt(secret_rev)
 
             #################
             #     loss:     #
             #################
-            #g_loss = guide_loss(steg_img.cuda(), cover.cuda())
-            g_loss = guide_loss(output_steg.cuda(), cover_input.cuda())
-            r_loss = reconstruction_loss(secret_rev, secret_input)
+            g_loss = guide_loss(steg_img.cuda(), cover.cuda())
+            r_loss = reconstruction_loss(secret_rev, secret)
             steg_low = output_steg.narrow(1, 0, c.channels_in)
             cover_low = cover_input.narrow(1, 0, c.channels_in)
             l_loss = low_frequency_loss(steg_low, cover_low)
@@ -169,15 +157,12 @@ try:
                 psnr_s = []
                 psnr_c = []
                 net.eval()
-                for i, x in enumerate(datasets.testloader):
+                for x in datasets.testloader:
                     x = x.to(device)
-                    #cover = x[x.shape[0] // 2:, :, :, :]
-                    #secret = x[:x.shape[0] // 2, :, :, :]
-                    cover_input = x[x.shape[0] // 2:, :, :, :]
-                    secret_input = x[:x.shape[0] // 2, :, :, :]
-                    #cover_input = dwt(cover)
-                    #secret_input = dwt(secret)
-                    
+                    cover = x[x.shape[0] // 2:, :, :, :]
+                    secret = x[:x.shape[0] // 2, :, :, :]
+                    cover_input = dwt(cover)
+                    secret_input = dwt(secret)
 
                     input_img = torch.cat((cover_input, secret_input), 1)
 
@@ -185,11 +170,9 @@ try:
                     #    forward:   #
                     #################
                     output = net(input_img)
-                    #output_steg = output.narrow(1, 0, 4 * c.channels_in)
-                    output_steg = output.narrow(1, 0, c.channels_in)
-                    #steg = iwt(output_steg)
-                    #output_z = output.narrow(1, 4 * c.channels_in, output.shape[1] - 4 * c.channels_in)
-                    output_z = output.narrow(1, c.channels_in, output.shape[1] - c.channels_in)
+                    output_steg = output.narrow(1, 0, 4 * c.channels_in)
+                    steg = iwt(output_steg)
+                    output_z = output.narrow(1, 4 * c.channels_in, output.shape[1] - 4 * c.channels_in)
                     output_z = gauss_noise(output_z.shape)
 
                     #################
@@ -198,36 +181,20 @@ try:
                     output_steg = output_steg.cuda()
                     output_rev = torch.cat((output_steg, output_z), 1)
                     output_image = net(output_rev, rev=True)
-                    #secret_rev = output_image.narrow(1, 4 * c.channels_in, output_image.shape[1] - 4 * c.channels_in)
-                    #secret_rev = iwt(secret_rev)
-                    secret_rev = output_image.narrow(1, c.channels_in, output_image.shape[1] - c.channels_in)
-                    
-
-                    #changing place!!
-                    torchvision.utils.save_image(cover_input, c.IMAGE_PATH_cover  + '%.5d.png' % i)
-                    torchvision.utils.save_image(secret_input, c.IMAGE_PATH_secret + '%.5d.png' % i)
-                    torchvision.utils.save_image(output_steg, c.IMAGE_PATH_steg + '%.5d.png' % i)
-                    torchvision.utils.save_image(secret_rev, c.IMAGE_PATH_secret_rev + '%.5d.png' % i)
+                    secret_rev = output_image.narrow(1, 4 * c.channels_in, output_image.shape[1] - 4 * c.channels_in)
+                    secret_rev = iwt(secret_rev)
 
                     secret_rev = secret_rev.cpu().numpy().squeeze() * 255
                     np.clip(secret_rev, 0, 255)
-                    #secret = secret.cpu().numpy().squeeze() * 255
-                    #np.clip(secret, 0, 255)
-                    #cover = cover.cpu().numpy().squeeze() * 255
-                    #np.clip(cover, 0, 255)
-                    #steg = steg.cpu().numpy().squeeze() * 255
-                    #np.clip(steg, 0, 255)
-                    secret_input = secret_input.cpu().numpy().squeeze() * 255
-                    np.clip(secret_input, 0, 255)
-                    cover_input = cover_input.cpu().numpy().squeeze() * 255
-                    np.clip(cover_input, 0, 255)
-                    output_steg = output_steg.cpu().numpy().squeeze() * 255
-                    np.clip(output_steg, 0, 255)
-                    #psnr_temp = computePSNR(secret_rev, secret)
-                    psnr_temp = computePSNR(secret_rev, secret_input)
+                    secret = secret.cpu().numpy().squeeze() * 255
+                    np.clip(secret, 0, 255)
+                    cover = cover.cpu().numpy().squeeze() * 255
+                    np.clip(cover, 0, 255)
+                    steg = steg.cpu().numpy().squeeze() * 255
+                    np.clip(steg, 0, 255)
+                    psnr_temp = computePSNR(secret_rev, secret)
                     psnr_s.append(psnr_temp)
-                    #psnr_temp_c = computePSNR(cover, steg)
-                    psnr_temp_c = computePSNR(cover_input, output_steg)
+                    psnr_temp_c = computePSNR(cover, steg)
                     psnr_c.append(psnr_temp_c)
 
                 writer.add_scalars("PSNR_S", {"average psnr": np.mean(psnr_s)}, i_epoch)
