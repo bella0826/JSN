@@ -1,26 +1,26 @@
 # Super parameters
 clamp = 2.0
-channels_in = 1
-log10_lr = -5.0
+channels_in = 3
+log10_lr = -4.5
 lr = 10 ** log10_lr
 epochs = 1000
 weight_decay = 1e-5
 init_scale = 0.01
 
-lamda_reconstruction = 3
+lamda_reconstruction = 5
 lamda_guide = 2         
 lamda_low_frequency = 1
 device_ids = [0]
 
 # Train:
-batch_size = 8
-cropsize = 256
+batch_size = 4
+cropsize = 224
 betas = (0.5, 0.999)
 weight_step = 1000
 gamma = 0.5
 
 # Val:
-cropsize_val = 256
+cropsize_val = 1024
 batchsize_val = 2
 shuffle_val = False
 val_freq = 100
@@ -55,8 +55,8 @@ IMAGE_PATH_steg = IMAGE_PATH + 'steg1/'
 IMAGE_PATH_secret_rev = IMAGE_PATH + 'secret-rev1/'
 
 # Load:
-suffix = 'model_checkpoint_00800_4.pt'
-tain_next = False
+suffix = 'model_without_low.pt'
+tain_next = True
 trained_epoch = 0
 
 # channel after DCT

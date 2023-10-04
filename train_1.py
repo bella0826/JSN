@@ -107,7 +107,7 @@ try:
         for i_batch, data in enumerate(datasets.trainloader):
             data = data.to(device)
             aa = data[data.shape[0] // 2:]
-            print(aa.shape)
+            #print(aa.shape)
             #cover = data[data.shape[0] // 2:]
             #secret = data[:data.shape[0] // 2]
             cover_input = data[data.shape[0] // 2:]

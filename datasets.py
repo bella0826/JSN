@@ -29,8 +29,8 @@ class Hinet_Dataset(Dataset):
     def __getitem__(self, index):
         try:
             image = Image.open(self.files[index])
-            #image = to_rgb(image)
-            image, cb, cr = image.split()
+            image = to_rgb(image)
+            #image, cb, cr = image.split()
             item = self.transform(image)
             return item
 
