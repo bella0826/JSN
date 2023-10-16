@@ -1,7 +1,7 @@
 # Super parameters
 clamp = 2.0
 channels_in = 3
-log10_lr = -4.5
+log10_lr = -5.0
 lr = 10 ** log10_lr
 epochs = 1000
 weight_decay = 1e-5
@@ -55,8 +55,8 @@ IMAGE_PATH_steg = IMAGE_PATH + 'steg1/'
 IMAGE_PATH_secret_rev = IMAGE_PATH + 'secret-rev1/'
 
 # Load:
-suffix = 'model_without_low.pt'
-tain_next = False
+suffix = 'model_without_low_3.pt'
+tain_next = True
 trained_epoch = 0
 
 # channel after DCT
