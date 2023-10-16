@@ -143,13 +143,13 @@ try:
             '''steg_low = output_steg.narrow(1, 0, c.channels_in)
             cover_low = cover_input.narrow(1, 0, c.channels_in)
             l_loss = low_frequency_loss(steg_low, cover_low)'''
-            N, k, blocksize, blocksize = output_steg.shape
+            '''N, k, blocksize, blocksize = output_steg.shape
             steg_DC = output_steg[:, :, blocksize // 2, blocksize // 2]
             N, k, blocksize, blocksize = cover_input.shape
             cover_DC = cover_input[:, :, blocksize // 2, blocksize // 2]
-            l_loss = DC_coefficient_loss(steg_DC, cover_DC)
+            l_loss = DC_coefficient_loss(steg_DC, cover_DC)'''
 
-            total_loss = c.lamda_reconstruction * r_loss + c.lamda_guide * g_loss + c.lamda_low_frequency * l_loss
+            total_loss = c.lamda_reconstruction * r_loss + c.lamda_guide * g_loss #+ c.lamda_low_frequency * l_loss
             total_loss.backward()
             optim.step()
             optim.zero_grad()
