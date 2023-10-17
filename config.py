@@ -55,7 +55,7 @@ IMAGE_PATH_steg = IMAGE_PATH + 'steg1/'
 IMAGE_PATH_secret_rev = IMAGE_PATH + 'secret-rev1/'
 
 # Load:
-suffix = 'model_without_low_3.pt'
+suffix = 'model_without_low_4.pt'
 tain_next = True
 trained_epoch = 0
 
