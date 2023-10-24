@@ -44,7 +44,7 @@ def reconstruction_loss(rev_input, input):
     return loss.to(device)
 '''
 def DC_coefficient_loss(steg_DC, cover_DC):
-    loss_fn = torch.nn.L1Loss(reduce=True, size_average=False)
+    loss_fn = torch.nn.MSELoss(reduce=True, size_average=False)
     loss = loss_fn(steg_DC, cover_DC)
     return loss.to(device)
 

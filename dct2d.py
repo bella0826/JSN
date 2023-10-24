@@ -5,6 +5,7 @@ import torch.nn.functional as F
 import config as c
 import datasets
 import torchvision
+import cv2
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(device)
@@ -31,13 +32,6 @@ class Dct2d(nn.Module):
             self.stride = self.blocksize
         
         # Precompute Haar-like DCT weight matrix
-        '''A = np.zeros((blocksize, blocksize))
-        for i in range(blocksize // 2):
-            A[i, 2 * i] = 1
-            A[i, 2 * i + 1] = 1
-            A[blocksize // 2 + i, 2 * i] = 1
-            A[blocksize // 2 + i, 2 * i + 1] = -1
-        '''
         A = np.zeros((blocksize,blocksize))
         for i in range(blocksize):
             c_i = 1/np.sqrt(2) if i == 0 else 1.
@@ -61,7 +55,8 @@ class Dct2d(nn.Module):
         tensor of dimension (N, k, blocksize, blocksize)
         where the 2nd dimension indexes the block. Dimensions 3 and 4 are the block DCT coefficients
         """
-        (N, C, H, W) = x.shape
+        '''(N, C, H, W) = x.shape
+        print(x.shape)
         assert (C == 1), "DCT is only implemented for a single channel"
         assert (H >= self.blocksize), "Input too small for blocksize"
         assert (W >= self.blocksize), "Input too small for blocksize"
@@ -75,10 +70,30 @@ class Dct2d(nn.Module):
         
         # Perform Haar-like DCT
         coeff = self.A.matmul(x).matmul(self.A.transpose(0, 1))
+        print(coeff.shape)
+        return coeff'''
+        # Initialize an array to store the DCT coefficients
+        dct_coefficients = np.zeros_like(x.cpu())
+
+        # Iterate through the batch of images
+        for batch_idx in range(x.shape[0]):
+            image = x[batch_idx, 0, :, :]  # Extract a single image from the batch
+            print(image.shape)
         
-        return coeff
+        # Iterate through the image in 128x128 blocks and apply DCT
+            for y in range(0, image.shape[0], self.blocksize):
+                for i in range(0, image.shape[1], self.blocksize):
+            # Extract a 128x128 block
+                    block = image[y:y+self.blocksize, i:i+self.blocksize]
+
+            # Apply 2D DCT to the block
+                    dct_block = cv2.dct(np.float32(block.cpu()))
+
+            # Store the DCT coefficients in the corresponding region of the result
+                    dct_coefficients[batch_idx, 0, y:y+self.blocksize, i:i+self.blocksize] = dct_block
+        return dct_coefficients
     
-    def inverse(self, coeff, output_shape=(c.cropsize, c.cropsize)):
+    def inverse(self, x, output_shape=(c.cropsize, c.cropsize)):
         """
         Performs 2D blockwise inverse Haar-like DCT
         
@@ -90,7 +105,7 @@ class Dct2d(nn.Module):
         Return:
         tensor of dimension (N, 1, h, w)
         """
-        if self.interleaving:
+        '''if self.interleaving:
             raise Exception('Inverse block DCT is not implemented for interleaving blocks!')
 
         # Perform inverse Haar-like DCT
@@ -99,7 +114,31 @@ class Dct2d(nn.Module):
         
         x = x.permute(0, 2, 3, 1).view(-1, self.blocksize**2, k)
         x = F.fold(x, output_size=(output_shape[-2], output_shape[-1]), kernel_size=self.blocksize, padding=0, stride=self.blocksize)
-        return x
+        return x'''
+        reconstructed_images = np.zeros_like(x.cpu())
+
+        # Iterate through the batch of DCT coefficients
+        for batch_idx in range(x.shape[0]):
+            dct_batch = x[batch_idx, 0, :, :]  # Extract a single DCT coefficients batch
+
+            # Initialize an array to store the reconstructed image
+            reconstructed_image = np.zeros((256, 256))
+
+            # Iterate through the batch of DCT coefficients in 128x128 blocks and apply IDCT
+            for y in range(0, dct_batch.shape[0], self.blocksize):
+                for i in range(0, dct_batch.shape[1], self.blocksize):
+                    # Extract a 128x128 DCT coefficient block
+                    dct_block = dct_batch[y:y+self.blocksize, i:i+self.blocksize]
+
+                    # Apply 2D IDCT to the DCT coefficient block
+                    block = cv2.idct(np.float32(dct_block))
+
+                    # Store the reconstructed block in the corresponding region of the result
+                    reconstructed_image[y:y+self.blocksize, i:i+self.blocksize] = block
+
+    # Store the reconstructed image in the batch
+            reconstructed_images[batch_idx, 0, :, :] = reconstructed_image
+        return reconstructed_images
     
 if __name__ == "__main__":
     DCT = Dct2d()
@@ -108,7 +147,9 @@ if __name__ == "__main__":
         #print(data.device)
         coeff = DCT(data)
         print(coeff.shape)
+        coeff = torch.from_numpy(coeff)
         img = DCT.inverse(coeff)
+        img = torch.from_numpy(img)
         torchvision.utils.save_image(coeff, 'hii.png')
         torchvision.utils.save_image(img, 'hi.png')
         if i == 0:
