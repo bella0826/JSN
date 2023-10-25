@@ -13,6 +13,7 @@ import modules.Unet_common as common
 import warnings
 from dct2d import Dct2d
 import torchvision
+from torch.autograd import Variable
 
 warnings.filterwarnings("ignore")
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -108,6 +109,7 @@ try:
 
         for i_batch, data in enumerate(datasets.trainloader):
             data = data.to(device)
+            #data = Variable(data, requires_grad=True).to(device, non_blocking=True)
             cover = data[data.shape[0] // 2:]
             secret = data[:data.shape[0] // 2]
             cover_input = dct(cover)
@@ -139,7 +141,7 @@ try:
             #     loss:     #
             #################
             g_loss = guide_loss(steg_img.cuda(), cover.cuda())
-            r_loss = reconstruction_loss(secret_rev, secret)
+            r_loss = reconstruction_loss(secret_rev.cuda(), secret.cuda())
             '''steg_low = output_steg.narrow(1, 0, c.channels_in)
             cover_low = cover_input.narrow(1, 0, c.channels_in)
             l_loss = low_frequency_loss(steg_low, cover_low)'''

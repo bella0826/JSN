@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+import torch_dct as dct
 import torch.nn as nn
 import torch.nn.functional as F
 import config as c
@@ -73,13 +74,12 @@ class Dct2d(nn.Module):
         print(coeff.shape)
         return coeff'''
         # Initialize an array to store the DCT coefficients
-        dct_coefficients = np.zeros_like(x.cpu())
+        dct_coefficients = torch.zeros_like(x)
 
         # Iterate through the batch of images
         for batch_idx in range(x.shape[0]):
             image = x[batch_idx, 0, :, :]  # Extract a single image from the batch
-            print(image.shape)
-        
+            
         # Iterate through the image in 128x128 blocks and apply DCT
             for y in range(0, image.shape[0], self.blocksize):
                 for i in range(0, image.shape[1], self.blocksize):
@@ -87,7 +87,7 @@ class Dct2d(nn.Module):
                     block = image[y:y+self.blocksize, i:i+self.blocksize]
 
             # Apply 2D DCT to the block
-                    dct_block = cv2.dct(np.float32(block.cpu()))
+                    dct_block = dct.dct_2d(block, norm='ortho')
 
             # Store the DCT coefficients in the corresponding region of the result
                     dct_coefficients[batch_idx, 0, y:y+self.blocksize, i:i+self.blocksize] = dct_block
@@ -115,14 +115,14 @@ class Dct2d(nn.Module):
         x = x.permute(0, 2, 3, 1).view(-1, self.blocksize**2, k)
         x = F.fold(x, output_size=(output_shape[-2], output_shape[-1]), kernel_size=self.blocksize, padding=0, stride=self.blocksize)
         return x'''
-        reconstructed_images = np.zeros_like(x.cpu())
+        reconstructed_images = torch.zeros_like(x)
 
         # Iterate through the batch of DCT coefficients
         for batch_idx in range(x.shape[0]):
             dct_batch = x[batch_idx, 0, :, :]  # Extract a single DCT coefficients batch
 
             # Initialize an array to store the reconstructed image
-            reconstructed_image = np.zeros((256, 256))
+            reconstructed_image = torch.zeros((256, 256))
 
             # Iterate through the batch of DCT coefficients in 128x128 blocks and apply IDCT
             for y in range(0, dct_batch.shape[0], self.blocksize):
@@ -131,13 +131,14 @@ class Dct2d(nn.Module):
                     dct_block = dct_batch[y:y+self.blocksize, i:i+self.blocksize]
 
                     # Apply 2D IDCT to the DCT coefficient block
-                    block = cv2.idct(np.float32(dct_block))
+                    block = dct.idct_2d(dct_block, norm='ortho')
 
                     # Store the reconstructed block in the corresponding region of the result
                     reconstructed_image[y:y+self.blocksize, i:i+self.blocksize] = block
 
     # Store the reconstructed image in the batch
             reconstructed_images[batch_idx, 0, :, :] = reconstructed_image
+
         return reconstructed_images
     
 if __name__ == "__main__":
@@ -147,9 +148,7 @@ if __name__ == "__main__":
         #print(data.device)
         coeff = DCT(data)
         print(coeff.shape)
-        coeff = torch.from_numpy(coeff)
         img = DCT.inverse(coeff)
-        img = torch.from_numpy(img)
         torchvision.utils.save_image(coeff, 'hii.png')
         torchvision.utils.save_image(img, 'hi.png')
         if i == 0:
