@@ -7,8 +7,8 @@ epochs = 1000
 weight_decay = 1e-5
 init_scale = 0.01
 
-lamda_reconstruction = 5
-lamda_guide = 1         
+lamda_reconstruction = 3
+lamda_guide = 3         
 lamda_low_frequency = 0
 device_ids = [0]
 
