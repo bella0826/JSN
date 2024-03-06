@@ -87,7 +87,7 @@ class Dct2d(nn.Module):
             # Extract a 128x128 block
                     block = image[i:i+self.blocksize, j:j+self.blocksize]
             # Apply 2D DCT to the block
-                    dct_block = dct.dct_2d(block, norm = 'ortho')
+                    dct_block = dct.dct_2d(block, 'ortho')
                     dct_blocks.append(dct_block.contiguous().view(1, c.channel_dct, 1, 1))
 
             total[batch_idx] = torch.cat(dct_blocks, dim=2).view(1, -1, x.shape[2]//self.blocksize, x.shape[3]//self.blocksize)
@@ -134,25 +134,64 @@ class Dct2d(nn.Module):
                     block[1, 0] = coeff[batch_idx, 2, i//self.blocksize, j//self.blocksize]
                     block[1, 1] = coeff[batch_idx, 3, i//self.blocksize, j//self.blocksize]'''
 
-                    dct_block = dct.idct_2d(block, norm = 'ortho')
+                    dct_block = dct.idct_2d(block, 'ortho')
                     
                     reconstructed_images[batch_idx, 0, i:i+self.blocksize, j:j+self.blocksize] = dct_block
             
         return reconstructed_images
     
+
+y_table = np.array([
+    [16, 11, 10, 16, 24, 40, 51, 61],
+    [12, 12, 14, 19, 26, 58, 60, 55],
+    [14, 13, 16, 24, 40, 57, 69, 56],
+    [14, 17, 22, 29, 51, 87, 80, 62],
+    [18, 22, 37, 56, 68, 109, 103, 77],
+    [24, 35, 55, 64, 81, 104, 113, 92],
+    [49, 64, 78, 87, 103, 121, 120, 101],
+    [72, 92, 95, 98, 112, 100, 103, 99]
+], dtype=np.float32).T
+y_table = nn.Parameter(torch.from_numpy(y_table))
+
+def quality_to_factor(quality):
+    """ Calculate factor corresponding to quality
+    Input:
+        quality(float): Quality for jpeg compression
+    Output:
+        factor(float): Compression factor
+    """
+    if quality < 50:
+        quality = 5000. / quality
+    else:
+        quality = 200. - quality * 2
+    return quality / 100.
+
+class Quantization(nn.Module):
+    def __init__(self, quality=90):
+        super(Quantization, self).__init__()
+        self.y_table = y_table 
+    def forward(self, x):
+        ans = x.float() / (self.y_table )
+        ans = torch.round(ans)
+        return ans
+    def inverse(self, x):
+        ans = x.float() * (self.y_table )
+        return ans
+    def set_quality(self, quality):
+        self.factor = quality_to_factor(quality)
+
+
 if __name__ == "__main__":
     DCT = Dct2d()
-    DWT = common.DWT()
-    start = time.time()
+
     for i, data in enumerate(datasets.testloader):
         data = data.to(device)
         #print(data.device)
         coeff = DCT(data)
+        print(coeff.shape)
         img = DCT.inverse(coeff)
         # torchvision.utils.save_image(coeff, 'hii.png')
         torchvision.utils.save_image(img, 'hi.png')
         if i == 0:
             break
-    end = time.time()
-    print(end - start)
     

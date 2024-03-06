@@ -11,7 +11,7 @@ class INV_block(nn.Module):
         super().__init__()
         if harr:
             self.split_len1 = c.channel_dct #in_1 * 4
-            self.split_len2 = c.channel_dct #in_2 * 4
+            self.split_len2 = c.channel_dct #in_2 * 4 
         self.clamp = clamp
         # ρ
         self.r = subnet_constructor(self.split_len1, self.split_len2)

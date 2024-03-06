@@ -13,11 +13,12 @@ import modules.Unet_common as common
 import warnings
 from dct2d import Dct2d
 import torchvision
-from torch.autograd import Variable
+from Quantization import Quantization
+from Subsample import chroma_subsampling
+import time
 
 warnings.filterwarnings("ignore")
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
 
 def gauss_noise(shape):
     noise = torch.zeros(shape).cuda()
@@ -39,15 +40,15 @@ def reconstruction_loss(rev_input, input):
     return loss.to(device)
 
 
-'''def low_frequency_loss(ll_input, gt_input):
+def low_frequency_loss(ll_input, gt_input):
     loss_fn = torch.nn.MSELoss(reduce=True, size_average=False)
     loss = loss_fn(ll_input, gt_input)
     return loss.to(device)
-'''
-def DC_coefficient_loss(steg_DC, cover_DC):
+
+'''def DC_coefficient_loss(steg_DC, cover_DC):
     loss_fn = torch.nn.MSELoss(reduce=True, size_average=False)
     loss = loss_fn(steg_DC, cover_DC)
-    return loss.to(device)
+    return loss.to(device)'''
 
 # 网络参数数量
 def get_parameter_number(net):
@@ -91,7 +92,15 @@ params_trainable = (list(filter(lambda p: p.requires_grad, net.parameters())))
 optim = torch.optim.AdamW(params_trainable, lr=c.lr, betas=c.betas, eps=1e-6, weight_decay=c.weight_decay)
 weight_scheduler = torch.optim.lr_scheduler.StepLR(optim, c.weight_step, gamma=c.gamma)
 
+# DCT function
 dct = Dct2d()
+
+# Quantization
+jpeg = Quantization()
+jpeg.set_quality(80)
+
+# Cb or Cr subsampling
+# subsampling = chroma_subsampling()
 
 if c.tain_next:
     load(c.MODEL_PATH + c.suffix)
@@ -102,18 +111,23 @@ try:
     for i_epoch in range(c.epochs):
         i_epoch = i_epoch + c.trained_epoch + 1
         loss_history = []
-
+        
         #################
         #     train:    #
         #################
 
         for i_batch, data in enumerate(datasets.trainloader):
+            # start = time.time()
             data = data.to(device)
             #data = Variable(data, requires_grad=True).to(device, non_blocking=True)
+
+            # y, cb, data = subsampling(data)
+
             cover = data[data.shape[0] // 2:]
             secret = data[:data.shape[0] // 2]
             cover_input = dct(cover)
             secret_input = dct(secret)
+            #print(cover_input.shape)
 
             input_img = torch.cat((cover_input, secret_input), 1)
 
@@ -123,7 +137,18 @@ try:
             output = net(input_img)
             output_steg = output.narrow(1, 0, c.channel_dct * c.channels_in)
             output_z = output.narrow(1, c.channel_dct * c.channels_in, output.shape[1] - c.channel_dct * c.channels_in)
-            steg_img = dct.inverse(output_steg)
+            # steg_img = dct.inverse(output_steg)
+            
+            ######################
+            #    quantization:   #
+            ######################
+            '''coeff = jpeg(output_steg)
+            output_steg_q = jpeg.inverse(coeff)'''
+            '''if i_epoch > 500:
+                output_steg_q = jpeg(output_steg)
+                output_steg_q = jpeg.inverse(output_steg_q)
+            else:
+                output_steg_q = output_steg'''
 
             #################
             #   backward:   #
@@ -135,29 +160,30 @@ try:
             output_image = net(output_rev, rev=True)
 
             secret_rev = output_image.narrow(1, c.channel_dct * c.channels_in, output_image.shape[1] - c.channel_dct * c.channels_in)
-            secret_rev = dct.inverse(secret_rev)
-
+            # secret_rev = dct.inverse(secret_rev)
             #################
             #     loss:     #
             #################
-            g_loss = guide_loss(steg_img.cuda(), cover.cuda())
-            r_loss = reconstruction_loss(secret_rev.cuda(), secret.cuda())
-            '''steg_low = output_steg.narrow(1, 0, c.channels_in)
+            g_loss = guide_loss(output_steg.cuda(), cover_input.cuda())
+            r_loss = reconstruction_loss(secret_rev.cuda(), secret_input.cuda())
+            steg_low = output_steg.narrow(1, 0, c.channels_in)
             cover_low = cover_input.narrow(1, 0, c.channels_in)
-            l_loss = low_frequency_loss(steg_low, cover_low)'''
+            l_loss = low_frequency_loss(steg_low, cover_low)
             '''N, k, blocksize, blocksize = output_steg.shape
             steg_DC = output_steg[:, :, blocksize // 2, blocksize // 2]
             N, k, blocksize, blocksize = cover_input.shape
             cover_DC = cover_input[:, :, blocksize // 2, blocksize // 2]
             l_loss = DC_coefficient_loss(steg_DC, cover_DC)'''
 
-            total_loss = c.lamda_reconstruction * r_loss + c.lamda_guide * g_loss #+ c.lamda_low_frequency * l_loss
+            total_loss = c.lamda_reconstruction * r_loss + c.lamda_guide * g_loss + c.lamda_low_frequency * l_loss
             total_loss.backward()
             optim.step()
             optim.zero_grad()
 
             loss_history.append([total_loss.item(), 0.])
-
+            # end = time.time()
+            # print(end - start)
+        
         epoch_losses = np.mean(np.array(loss_history), axis=0)
         epoch_losses[1] = np.log10(optim.param_groups[0]['lr'])
 
@@ -169,8 +195,12 @@ try:
                 psnr_s = []
                 psnr_c = []
                 net.eval()
+                # start = time.time()
                 for i, x in enumerate(datasets.testloader):
                     x = x.to(device)
+
+                    # y, cb, x = subsampling(x)
+
                     cover = x[x.shape[0] // 2:, :, :, :]
                     secret = x[:x.shape[0] // 2, :, :, :]
                     cover_input = dct(cover)
@@ -216,7 +246,8 @@ try:
                     psnr_s.append(psnr_temp)
                     psnr_temp_c = computePSNR(cover, steg)
                     psnr_c.append(psnr_temp_c)
-
+                # end = time.time()
+                # print(end - start)
                 writer.add_scalars("PSNR_S", {"average psnr": np.mean(psnr_s)}, i_epoch)
                 writer.add_scalars("PSNR_C", {"average psnr": np.mean(psnr_c)}, i_epoch)
 

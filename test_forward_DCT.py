@@ -9,7 +9,8 @@ from model import *
 import config as c
 import datasets
 import modules.Unet_common as common
-from DiffJPEG import DiffJPEG
+from dct2d import Dct2d
+from Quantization import Quantization
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -56,60 +57,52 @@ load(c.MODEL_PATH + c.suffix)
 
 net.eval()
 
-dwt = common.DWT()
-iwt = common.IWT()
-jpg = DiffJPEG(512, 512, differentiable=True)
-jpg.set_quality(90)
+dct = Dct2d()
+jpeg = Quantization()
+jpeg.set_quality(90)
 
 with torch.no_grad():
-    psnr_c = []
-    psnr_s = []
     for i, data in enumerate(datasets.testloader):
         data = data.to(device)          #first channel(batch size) = 2
         cover = data[data.shape[0] // 2:, :, :, :]
         secret = data[:data.shape[0] // 2, :, :, :]
-        cover_input = dwt(cover)
-        secret_input = dwt(secret)
+        cover_input = dct(cover)
+        secret_input = dct(secret)
         input_img = torch.cat((cover_input, secret_input), 1)
 
         #################
         #    forward:   #
         #################
         output = net(input_img)
-        output_steg = output.narrow(1, 0, 4 * c.channels_in)
-        output_z = output.narrow(1, 4 * c.channels_in, output.shape[1] - 4 * c.channels_in)
-        steg_img = iwt(output_steg)
+        output_steg = output.narrow(1, 0, c.channel_dct * c.channels_in)
+        output_z = output.narrow(1, c.channel_dct * c.channels_in, output.shape[1] - c.channel_dct * c.channels_in)
+        steg_img = dct.inverse(output_steg)
         backward_z = gauss_noise(output_z.shape)
         
-        steg_img1 = steg_img * 255.0
-        # steg_img = steg_img.expand(-1, 3, -1, -1)
-        steg_img1 = jpg(steg_img1)
-        #steg_img = torch.mean(steg_img, dim=1, keepdim=True)
-        steg_img1 = steg_img1 / 255.0
+        #####################
+        #   quantization:   #
+        #####################
+        #output_steg = jpeg(output_steg)
+        #output_steg = jpeg.inverse(output_steg)
 
         #################
         #   backward:   #
         #################
-        output_steg = dwt(steg_img1)
-        output_rev = torch.cat((output_steg, backward_z), 1)
+        '''output_rev = torch.cat((output_steg, backward_z), 1)
         bacward_img = net(output_rev, rev=True)
-        secret_rev = bacward_img.narrow(1, 4 * c.channels_in, bacward_img.shape[1] - 4 * c.channels_in)
-        secret_rev = iwt(secret_rev)
-        cover_rev = bacward_img.narrow(1, 0, 4 * c.channels_in)
-        cover_rev = iwt(cover_rev)
+        secret_rev = bacward_img.narrow(1, c.channel_dct * c.channels_in, bacward_img.shape[1] - c.channel_dct * c.channels_in)
+        secret_rev = dct.inverse(secret_rev)
+        cover_rev = bacward_img.narrow(1, 0, c.channel_dct * c.channels_in)
+        cover_rev = dct.inverse(cover_rev)
         resi_cover = (steg_img - cover) * 20
-        resi_secret = (secret_rev - secret) * 20
-        psnr_tmp = computePSNR(cover.cpu() * 255.0, steg_img.cpu() *255.0)
-        psnr_c.append(psnr_tmp)
-        psnr_tmp = computePSNR(secret.cpu()*255.0, secret_rev.cpu()*255.0)
-        psnr_s.append(psnr_tmp)
+        resi_secret = (secret_rev - secret) * 20'''
 
         torchvision.utils.save_image(cover, c.IMAGE_PATH_cover + '%.5d.png' % i)
         torchvision.utils.save_image(secret, c.IMAGE_PATH_secret + '%.5d.png' % i)
         torchvision.utils.save_image(steg_img, c.IMAGE_PATH_steg + '%.5d.png' % i)
-        torchvision.utils.save_image(secret_rev, c.IMAGE_PATH_secret_rev + '%.5d.png' % i)
+        #torchvision.utils.save_image(secret_rev, c.IMAGE_PATH_secret_rev + '%.5d.png' % i)
         
-    print(np.mean(psnr_c), np.mean(psnr_s))
+        
 
 
 

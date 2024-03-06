@@ -751,13 +751,13 @@ class VGG_conv0_the_same_size(nn.Module):
 class Res(nn.Module):
     def __init__(self, input, output):
         super(Res, self).__init__()
-        self.conv0 = nn.Conv2d(input, input, 3, 1, 1, bias = True)
-        self.conv1 = nn.Conv2d(input, input, 3, 1, 1, bias = True)
+        self.conv0 = nn.Conv2d(input, 32, 3, 1, 1, bias = True)
+        self.conv1 = nn.Conv2d(32, 32, 3, 1, 1, bias = True)
 
-        self.conv2 = nn.Conv2d(input, input, 3, 1, 1, bias = True)
-        self.conv3 = nn.Conv2d(input, input, 3, 1, 1, bias = True)
+        self.conv2 = nn.Conv2d(input + 32, 32, 3, 1, 1, bias = True)
+        self.conv3 = nn.Conv2d(32, 32, 3, 1, 1, bias = True)
 
-        self.conv4 = nn.Conv2d(input, output, 3, 1, 1, bias = True)
+        self.conv4 = nn.Conv2d(32 * 2, output, 3, 1, 1, bias = True)
 
         self.lrelu = nn.LeakyReLU(inplace=True)
 
@@ -773,8 +773,8 @@ class Res(nn.Module):
         return x
     
     def forward(self, x):   
-        x1 = self.convblock1(x) + x
-        x2 = self.convblock2(x1) + x1
-        output = self.conv4(x2)
+        x1 = self.convblock1(x)
+        x2 = self.convblock2(torch.cat((x, x1), 1))
+        output = self.conv4(torch.cat((x1, x2), 1))
         return output
 
