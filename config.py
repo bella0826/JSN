@@ -8,7 +8,7 @@ weight_decay = 1e-5
 init_scale = 0.01
 
 lamda_reconstruction = 3
-lamda_guide = 2         
+lamda_guide = 1         
 lamda_low_frequency = 0
 device_ids = [0]
 
@@ -56,8 +56,8 @@ IMAGE_PATH_secret_rev = IMAGE_PATH + 'secret-rev1/'
 IMAGE_PATH_backward = IMAGE_PATH + 'YCbCr/'
 
 # Load:
-suffix = 'model_checkpoint_00900.pt'
-tain_next = True
+suffix = 'model_with8x8_3.pt'
+tain_next = False
 trained_epoch = 0
 
 # LoadCb

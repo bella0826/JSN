@@ -88,7 +88,7 @@ dct = Dct2d()
 jpeg = Quantization()
 jpeg.set_quality(90)
 
-jpg = DiffJPEG(512, 512, differentiable=True)
+jpg = DiffJPEG(1024, 1024, differentiable=True)
 jpg.set_quality(90)
 subsampling = chroma_subsampling()
 upsampling = chroma_upsampling()
@@ -221,6 +221,7 @@ with torch.no_grad():
         np.clip(secret_rev, 0, 255)
         psnr_tmp_s = computePSNR(secret, secret_rev)
         psnr_s.append(psnr_tmp_s)
+        print(psnr_tmp, psnr_tmp_s)
         
         
     print(np.mean(psnr_c), np.mean(psnr_s))
