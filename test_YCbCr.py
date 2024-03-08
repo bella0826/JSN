@@ -96,6 +96,8 @@ rgb = ycbcr_to_rgb_jpeg()
 ycbcr = rgb_to_ycbcr_jpeg()
 
 with torch.no_grad():
+    psnr_c = []
+    psnr_s = []
     for i, data in enumerate(datasets.testloader):
         data = data.to(device)          #first channel(batch size) = 2
 
@@ -202,18 +204,25 @@ with torch.no_grad():
         secret = rgb(secret)
         secret_rev = rgb(secret_rev)
 
-        '''psnr_tmp = computePSNR(cover.cpu() * 255.0, steg_img.cpu() *255.0)
-        psnr_c.append(psnr_tmp)
-        psnr_tmp_s = computePSNR(secret.cpu()*255.0, secret_rev.cpu()*255.0)
-        psnr_s.append(psnr_tmp_s)
-        print(psnr_tmp, psnr_tmp_s)'''
-
         torchvision.utils.save_image(cover, c.IMAGE_PATH_cover + '%.5d.png' % i)
         torchvision.utils.save_image(secret, c.IMAGE_PATH_secret + '%.5d.png' % i)
         torchvision.utils.save_image(steg_img, c.IMAGE_PATH_steg + '%.5d.png' % i)
         torchvision.utils.save_image(secret_rev, c.IMAGE_PATH_secret_rev + '%.5d.png' % i)
-        
-        
 
+        cover = cover.cpu().numpy().squeeze() * 255.0
+        np.clip(cover, 0, 255)
+        steg_img = steg_img.cpu().numpy().squeeze() * 255.0
+        np.clip(steg_img, 0, 255)
+        psnr_tmp = computePSNR(cover, steg_img)
+        psnr_c.append(psnr_tmp)
+        secret = secret.cpu().numpy().squeeze() * 255.0
+        np.clip(secret, 0, 255)
+        secret_rev = secret_rev.cpu().numpy().squeeze() * 255.0
+        np.clip(secret_rev, 0, 255)
+        psnr_tmp_s = computePSNR(secret, secret_rev)
+        psnr_s.append(psnr_tmp_s)
+        
+        
+    print(np.mean(psnr_c), np.mean(psnr_s))
 
 

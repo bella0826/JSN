@@ -56,7 +56,7 @@ IMAGE_PATH_secret_rev = IMAGE_PATH + 'secret-rev1/'
 IMAGE_PATH_backward = IMAGE_PATH + 'YCbCr/'
 
 # Load:
-suffix = 'model_with8x8_2.pt'
+suffix = 'model_checkpoint_00900.pt'
 tain_next = True
 trained_epoch = 0
 
