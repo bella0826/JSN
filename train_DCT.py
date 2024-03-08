@@ -142,8 +142,8 @@ try:
             ######################
             #    quantization:   #
             ######################
-            '''coeff = jpeg(output_steg)
-            output_steg_q = jpeg.inverse(coeff)'''
+            coeff = jpeg(output_steg)
+            output_steg_q = jpeg.inverse(coeff)
             '''if i_epoch > 500:
                 output_steg_q = jpeg(output_steg)
                 output_steg_q = jpeg.inverse(output_steg_q)
