@@ -64,6 +64,7 @@ jpeg = Quantization()
 jpeg.set_quality(90)
 
 jpg = DiffJPEG(512, 512, differentiable=True)
+jpg.set_quality(90)
 subsampling = chroma_subsampling()
 
 with torch.no_grad():
@@ -92,11 +93,11 @@ with torch.no_grad():
         ##############
         #    JPEG:   #
         ##############
-        '''steg_img = steg_img * 255.0
+        steg_img = steg_img * 255.0
         steg_img = steg_img.expand(-1, 3, -1, -1)
         steg_img = jpg(steg_img)
         steg_img = torch.mean(steg_img, dim=1, keepdim=True)
-        steg_img = steg_img / 255.0'''
+        steg_img = steg_img / 255.0
         # the jpeged steg_img is saved below
 
         #####################

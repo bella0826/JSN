@@ -105,6 +105,7 @@ jpeg.set_quality(80)
 if c.tain_next:
     load(c.MODEL_PATH + c.suffix)
 optim = torch.optim.AdamW(params_trainable, lr=c.lr, betas=c.betas, eps=1e-6, weight_decay=c.weight_decay)
+
 try:
     writer = SummaryWriter(comment='hinet', filename_suffix="steg")
 

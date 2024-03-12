@@ -88,7 +88,7 @@ dct = Dct2d()
 jpeg = Quantization()
 jpeg.set_quality(90)
 
-jpg = DiffJPEG(1024, 1024, differentiable=True)
+jpg = DiffJPEG(512, 512, differentiable=True)
 jpg.set_quality(90)
 subsampling = chroma_subsampling()
 upsampling = chroma_upsampling()
@@ -149,8 +149,8 @@ with torch.no_grad():
         #    JPEG:   #
         ##############
         steg_img = upsampling(steg_img_y, steg_img_cb, steg_img_cr)
-        # steg_img = rgb(steg_img)
-        steg_img1 = rgb(steg_img)
+        steg_img = rgb(steg_img)
+        '''steg_img1 = rgb(steg_img)
 
         steg_img1 = steg_img1 * 255.0
         # steg_img = steg_img.expand(-1, 3, -1, -1)

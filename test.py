@@ -81,16 +81,16 @@ with torch.no_grad():
         steg_img = iwt(output_steg)
         backward_z = gauss_noise(output_z.shape)
         
-        steg_img1 = steg_img * 255.0
+        '''steg_img1 = steg_img * 255.0
         # steg_img = steg_img.expand(-1, 3, -1, -1)
         steg_img1 = jpg(steg_img1)
         #steg_img = torch.mean(steg_img, dim=1, keepdim=True)
-        steg_img1 = steg_img1 / 255.0
+        steg_img1 = steg_img1 / 255.0'''
 
         #################
         #   backward:   #
         #################
-        output_steg = dwt(steg_img1)
+        output_steg = dwt(steg_img)
         output_rev = torch.cat((output_steg, backward_z), 1)
         bacward_img = net(output_rev, rev=True)
         secret_rev = bacward_img.narrow(1, 4 * c.channels_in, bacward_img.shape[1] - 4 * c.channels_in)
@@ -99,15 +99,25 @@ with torch.no_grad():
         cover_rev = iwt(cover_rev)
         resi_cover = (steg_img - cover) * 20
         resi_secret = (secret_rev - secret) * 20
-        psnr_tmp = computePSNR(cover.cpu() * 255.0, steg_img.cpu() *255.0)
-        psnr_c.append(psnr_tmp)
-        psnr_tmp = computePSNR(secret.cpu()*255.0, secret_rev.cpu()*255.0)
-        psnr_s.append(psnr_tmp)
 
         torchvision.utils.save_image(cover, c.IMAGE_PATH_cover + '%.5d.png' % i)
         torchvision.utils.save_image(secret, c.IMAGE_PATH_secret + '%.5d.png' % i)
         torchvision.utils.save_image(steg_img, c.IMAGE_PATH_steg + '%.5d.png' % i)
         torchvision.utils.save_image(secret_rev, c.IMAGE_PATH_secret_rev + '%.5d.png' % i)
+
+        cover = cover.cpu().numpy().squeeze() * 255.0
+        np.clip(cover, 0, 255)
+        steg_img = steg_img.cpu().numpy().squeeze() * 255.0
+        np.clip(steg_img, 0, 255)
+        psnr_tmp = computePSNR(cover, steg_img)
+        psnr_c.append(psnr_tmp)
+        secret = secret.cpu().numpy().squeeze() * 255.0
+        np.clip(secret, 0, 255)
+        secret_rev = secret_rev.cpu().numpy().squeeze() * 255.0
+        np.clip(secret_rev, 0, 255)
+        psnr_tmp_s = computePSNR(secret, secret_rev)
+        psnr_s.append(psnr_tmp_s)
+        print(psnr_tmp, psnr_tmp_s)
         
     print(np.mean(psnr_c), np.mean(psnr_s))
 
