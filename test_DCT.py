@@ -64,7 +64,7 @@ jpeg = Quantization()
 jpeg.set_quality(90)
 
 jpg = DiffJPEG(512, 512, differentiable=True)
-jpg.set_quality(90)
+jpg.set_quality(80)
 subsampling = chroma_subsampling()
 
 with torch.no_grad():
