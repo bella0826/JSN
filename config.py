@@ -20,7 +20,7 @@ weight_step = 1000
 gamma = 0.5
 
 # Val:
-cropsize_val = 256
+cropsize_val = 512
 batchsize_val = 2
 shuffle_val = False
 val_freq = 100
@@ -44,7 +44,7 @@ progress_bar = False
 
 # Saving checkpoints:
 
-MODEL_PATH = '/home/han/model/'
+MODEL_PATH = '/home/han/model_final/'
 checkpoint_on_error = True
 SAVE_freq = 100
 
@@ -55,7 +55,7 @@ IMAGE_PATH_steg = IMAGE_PATH + 'steg1/'
 IMAGE_PATH_secret_rev = IMAGE_PATH + 'secret-rev1/'
 
 # Load:
-suffix = 'model_checkpoint_01000_5.pt'
+suffix = 'model.pt'
 tain_next = False
 trained_epoch = 0
 
