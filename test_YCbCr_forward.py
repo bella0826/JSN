@@ -173,7 +173,7 @@ with torch.no_grad():
         #################
         #   backward:   #
         #################
-        output_steg_y = dct(steg_img_y)
+        '''output_steg_y = dct(steg_img_y)
         output_rev_y = torch.cat((output_steg_y, backward_z_y), 1)
         bacward_img_y = net(output_rev_y, rev=True)
         secret_rev_y = bacward_img_y.narrow(1, c.channel_dct * c.channels_in, bacward_img_y.shape[1] - c.channel_dct * c.channels_in)
@@ -197,20 +197,20 @@ with torch.no_grad():
         cover_rev_cr = bacward_img_cr.narrow(1, 0, c.channel_dct * c.channels_in)
         cover_rev_cr = dct.inverse(cover_rev_cr)
         #resi_cover = (steg_img - cover_y) * 20
-        #resi_secret = (secret_rev - secret_y) * 20
+        #resi_secret = (secret_rev - secret_y) * 20'''
 
-        #steg_img = torch.cat((steg_img, cover[:, 1:, :, :]), dim=1)
-        secret_rev = upsampling(secret_rev_y, secret_cb, secret_rev_cr)
+        # steg_img = torch.cat((steg_img, cover[:, 1:, :, :]), dim=1)
+        # secret_rev = upsampling(secret_rev_y, secret_cb, secret_rev_cr)
         cover = rgb(cover)
         secret = rgb(secret)
-        secret_rev = rgb(secret_rev)
+        # secret_rev = rgb(secret_rev)
 
         torchvision.utils.save_image(cover, c.IMAGE_PATH_cover + '%.5d.png' % i)
         torchvision.utils.save_image(secret, c.IMAGE_PATH_secret + '%.5d.png' % i)
         torchvision.utils.save_image(steg_img, c.IMAGE_PATH_steg + '%.5d.png' % i)
-        torchvision.utils.save_image(secret_rev, c.IMAGE_PATH_secret_rev + '%.5d.png' % i)
+        # torchvision.utils.save_image(secret_rev, c.IMAGE_PATH_secret_rev + '%.5d.png' % i)
 
-        cover = cover.cpu().numpy().squeeze() * 255.0
+        '''cover = cover.cpu().numpy().squeeze() * 255.0
         np.clip(cover, 0, 255)
         steg_img = steg_img.cpu().numpy().squeeze() * 255.0
         np.clip(steg_img, 0, 255)
@@ -222,9 +222,9 @@ with torch.no_grad():
         np.clip(secret_rev, 0, 255)
         psnr_tmp_s = computePSNR(secret, secret_rev)
         psnr_s.append(psnr_tmp_s)
-        print(psnr_tmp, psnr_tmp_s)
+        print(psnr_tmp, psnr_tmp_s)'''
         
         
-    print(np.mean(psnr_c), np.mean(psnr_s))
+    # print(np.mean(psnr_c), np.mean(psnr_s))
 
 

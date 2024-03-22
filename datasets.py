@@ -7,9 +7,9 @@ from natsort import natsorted
 
 
 def to_rgb(image):
-    # rgb_image = Image.new("RGB", image.size)
-    # rgb_image.paste(image)
-    rgb_image = image.convert('YCbCr')
+    rgb_image = Image.new("RGB", image.size)
+    rgb_image.paste(image)
+    # rgb_image = image.convert('YCbCr')
     return rgb_image
 
 
