@@ -200,7 +200,7 @@ with torch.no_grad():
         #resi_secret = (secret_rev - secret_y) * 20
 
         #steg_img = torch.cat((steg_img, cover[:, 1:, :, :]), dim=1)
-        secret_rev = upsampling(secret_rev_y, secret_cb, secret_rev_cr)
+        secret_rev = upsampling(secret_rev_y, secret_rev_cb, secret_rev_cr)
         cover = rgb(cover)
         secret = rgb(secret)
         secret_rev = rgb(secret_rev)

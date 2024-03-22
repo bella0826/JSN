@@ -85,9 +85,11 @@ loadCb(c.MODEL_PATH + c.suffix_cb)
 netCb.eval()
 
 dct = Dct2d()
+'''jpeg = Quantization()
+jpeg.set_quality(80)
 
 jpg = DiffJPEG(512, 512, differentiable=True)
-jpg.set_quality(90)
+jpg.set_quality(90)'''
 subsampling = chroma_subsampling()
 upsampling = chroma_upsampling()
 rgb = ycbcr_to_rgb_jpeg()
@@ -96,22 +98,22 @@ ycbcr = rgb_to_ycbcr_jpeg()
 with torch.no_grad():
     psnr_c = []
     psnr_s = []
-    for i, data in enumerate(datasets.testloader):
+    for i, data in enumerate(datasets.backwardloader):
         data = data.to(device)          #first channel(batch size) = 2
 
         data = ycbcr(data)
-        y, cb, cr = subsampling(data)
+        steg_img_y, steg_img_cb, steg_img_cr = subsampling(data)
 
-        cover = data[data.shape[0] // 2:, :, :, :]
+        '''cover = data[data.shape[0] // 2:, :, :, :]
         secret = data[:data.shape[0] // 2, :, :, :]
         cover_y = y[data.shape[0] // 2:, :, :, :]
         secret_y = y[:data.shape[0] // 2, :, :, :]
         cover_cb = cb[data.shape[0] // 2:, :, :, :]
         secret_cb = cb[:data.shape[0] // 2, :, :, :]
         cover_cr = cr[data.shape[0] // 2:, :, :, :]
-        secret_cr = cr[:data.shape[0] // 2, :, :, :]
+        secret_cr = cr[:data.shape[0] // 2, :, :, :]'''
 
-        cover_input_y = dct(cover_y)
+        '''cover_input_y = dct(cover_y)
         secret_input_y = dct(secret_y)
         input_img_y = torch.cat((cover_input_y, secret_input_y), 1)
 
@@ -121,33 +123,40 @@ with torch.no_grad():
 
         cover_input_cr = dct(cover_cr)
         secret_input_cr = dct(secret_cr)
-        input_img_cr = torch.cat((cover_input_cr, secret_input_cr), 1)
+        input_img_cr = torch.cat((cover_input_cr, secret_input_cr), 1)'''
+
+        steg_img_y = dct(steg_img_y)
+        
+        steg_img_cb = dct(steg_img_cb)
+
+        steg_img_cr = dct(steg_img_cr)
+
 
         #################
         #    forward:   #
         #################
-        output_y = net(input_img_y)
+        '''output_y = net(input_img_y)
         output_steg_y = output_y.narrow(1, 0, c.channel_dct * c.channels_in)
         output_z_y = output_y.narrow(1, c.channel_dct * c.channels_in, output_y.shape[1] - c.channel_dct * c.channels_in)
-        steg_img_y = dct.inverse(output_steg_y)
-        backward_z_y = gauss_noise(output_z_y.shape)
+        steg_img_y = dct.inverse(output_steg_y)'''
+        backward_z_y = gauss_noise(steg_img_y.shape)
 
-        output_cb = netCb(input_img_cb)
+        '''output_cb = netCb(input_img_cb)
         output_steg_cb = output_cb.narrow(1, 0, c.channel_dct * c.channels_in)
         output_z_cb = output_cb.narrow(1, c.channel_dct * c.channels_in, output_cb.shape[1] - c.channel_dct * c.channels_in)
-        steg_img_cb = dct.inverse(output_steg_cb)
-        backward_z_cb = gauss_noise(output_z_cb.shape)
+        steg_img_cb = dct.inverse(output_steg_cb)'''
+        backward_z_cb = gauss_noise(steg_img_cb.shape)
 
-        output_cr = netCb(input_img_cr)
+        '''output_cr = netCb(input_img_cr)
         output_steg_cr = output_cr.narrow(1, 0, c.channel_dct * c.channels_in)
         output_z_cr = output_cr.narrow(1, c.channel_dct * c.channels_in, output_cr.shape[1] - c.channel_dct * c.channels_in)
-        steg_img_cr = dct.inverse(output_steg_cr)
-        backward_z_cr = gauss_noise(output_z_cr.shape)
+        steg_img_cr = dct.inverse(output_steg_cr)'''
+        backward_z_cr = gauss_noise(steg_img_cr.shape)
 
         ##############
         #    JPEG:   #
         ##############
-        steg_img = upsampling(steg_img_y, steg_img_cb, steg_img_cr)
+        '''steg_img = upsampling(steg_img_y, steg_img_cb, steg_img_cr)
         # steg_img = rgb(steg_img)
         steg_img1 = rgb(steg_img)
 
@@ -159,7 +168,7 @@ with torch.no_grad():
 
         steg_img1 = ycbcr(steg_img1)
         steg_img_y, steg_img_cb, steg_img_cr = subsampling(steg_img1)
-        steg_img = rgb(steg_img1)    # for saving as rgb image
+        steg_img = rgb(steg_img1)    # for saving as rgb image'''
 
         #####################
         #   quantization:   #
@@ -171,42 +180,42 @@ with torch.no_grad():
         #################
         #   backward:   #
         #################
-        '''output_steg_y = dct(steg_img_y)
-        output_rev_y = torch.cat((output_steg_y, backward_z_y), 1)
+        # output_steg_y = dct(steg_img_y)
+        output_rev_y = torch.cat((steg_img_y, backward_z_y), 1)
         bacward_img_y = net(output_rev_y, rev=True)
         secret_rev_y = bacward_img_y.narrow(1, c.channel_dct * c.channels_in, bacward_img_y.shape[1] - c.channel_dct * c.channels_in)
         secret_rev_y = dct.inverse(secret_rev_y)
         cover_rev_y = bacward_img_y.narrow(1, 0, c.channel_dct * c.channels_in)
         cover_rev_y = dct.inverse(cover_rev_y)
 
-        output_steg_cb = dct(steg_img_cb)
-        output_rev_cb = torch.cat((output_steg_cb, backward_z_cb), 1)
+        # output_steg_cb = dct(steg_img_cb)
+        output_rev_cb = torch.cat((steg_img_cb, backward_z_cb), 1)
         bacward_img_cb = netCb(output_rev_cb, rev=True)
         secret_rev_cb = bacward_img_cb.narrow(1, c.channel_dct * c.channels_in, bacward_img_cb.shape[1] - c.channel_dct * c.channels_in)
         secret_rev_cb = dct.inverse(secret_rev_cb)
         cover_rev_cb = bacward_img_cb.narrow(1, 0, c.channel_dct * c.channels_in)
         cover_rev_cb = dct.inverse(cover_rev_cb)
 
-        output_steg_cr = dct(steg_img_cr)
-        output_rev_cr = torch.cat((output_steg_cr, backward_z_cr), 1)
+        # output_steg_cr = dct(steg_img_cr)
+        output_rev_cr = torch.cat((steg_img_cr, backward_z_cr), 1)
         bacward_img_cr = netCb(output_rev_cr, rev=True)
         secret_rev_cr = bacward_img_cr.narrow(1, c.channel_dct * c.channels_in, bacward_img_cr.shape[1] - c.channel_dct * c.channels_in)
         secret_rev_cr = dct.inverse(secret_rev_cr)
         cover_rev_cr = bacward_img_cr.narrow(1, 0, c.channel_dct * c.channels_in)
         cover_rev_cr = dct.inverse(cover_rev_cr)
         #resi_cover = (steg_img - cover_y) * 20
-        #resi_secret = (secret_rev - secret_y) * 20'''
+        #resi_secret = (secret_rev - secret_y) * 20
 
-        # steg_img = torch.cat((steg_img, cover[:, 1:, :, :]), dim=1)
-        # secret_rev = upsampling(secret_rev_y, secret_cb, secret_rev_cr)
-        cover = rgb(cover)
-        secret = rgb(secret)
-        # secret_rev = rgb(secret_rev)
+        #steg_img = torch.cat((steg_img, cover[:, 1:, :, :]), dim=1)
+        secret_rev = upsampling(secret_rev_y, secret_rev_cb, secret_rev_cr)
+        # cover = rgb(cover)
+        # secret = rgb(secret)
+        secret_rev = rgb(secret_rev)
 
-        torchvision.utils.save_image(cover, c.IMAGE_PATH_cover + '%.5d.png' % i)
-        torchvision.utils.save_image(secret, c.IMAGE_PATH_secret + '%.5d.png' % i)
-        torchvision.utils.save_image(steg_img, c.IMAGE_PATH_steg + '%.5d.png' % i)
-        # torchvision.utils.save_image(secret_rev, c.IMAGE_PATH_secret_rev + '%.5d.png' % i)
+        # torchvision.utils.save_image(cover, c.IMAGE_PATH_cover + '%.5d.png' % i)
+        # torchvision.utils.save_image(secret, c.IMAGE_PATH_secret + '%.5d.png' % i)
+        # torchvision.utils.save_image(steg_img, c.IMAGE_PATH_steg + '%.5d.png' % i)
+        torchvision.utils.save_image(secret_rev, c.IMAGE_PATH_secret_rev + '%.5d.png' % i)
 
         '''cover = cover.cpu().numpy().squeeze() * 255.0
         np.clip(cover, 0, 255)
