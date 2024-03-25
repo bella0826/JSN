@@ -12,7 +12,7 @@ import modules.Unet_common as common
 from dct2d import Dct2d
 from Quantization import Quantization
 from DiffJPEG import DiffJPEG
-from Subsample import chroma_subsampling
+from Subsample import chroma_subsampling, rgb_to_ycbcr_jpeg
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -64,8 +64,9 @@ jpeg = Quantization()
 jpeg.set_quality(90)
 
 jpg = DiffJPEG(512, 512, differentiable=True)
-jpg.set_quality(80)
+jpg.set_quality(90)
 subsampling = chroma_subsampling()
+ycbcr = rgb_to_ycbcr_jpeg()
 
 with torch.no_grad():
     psnr_c = []
@@ -73,6 +74,7 @@ with torch.no_grad():
     for i, data in enumerate(datasets.testloader):
         data = data.to(device)          #first channel(batch size) = 2
 
+        data = ycbcr(data)
         data, cb, cr = subsampling(data)
 
         cover = data[data.shape[0] // 2:, :, :, :]
