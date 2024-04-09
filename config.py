@@ -1,14 +1,14 @@
 # Super parameters
 clamp = 2.0
 channels_in = 1
-log10_lr = -5.2
+log10_lr = -5.0
 lr = 10 ** log10_lr
 epochs = 1000
 weight_decay = 1e-5
 init_scale = 0.01
 
 lamda_reconstruction = 3
-lamda_guide = 2         
+lamda_guide = 1         
 lamda_low_frequency = 0
 device_ids = [0]
 
@@ -56,9 +56,9 @@ IMAGE_PATH_secret_rev = IMAGE_PATH + 'secret-rev1/'
 IMAGE_PATH_backward = IMAGE_PATH + 'YCbCr/'
 
 # Load:
-suffix = 'model_mul.pt'
-tain_next = True
-trained_epoch = 1000
+suffix = 'model_quantize_6.pt'
+tain_next = False
+trained_epoch = 0
 
 # LoadCb
 suffix_cb = 'model_cb.pt'

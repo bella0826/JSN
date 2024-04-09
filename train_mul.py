@@ -97,7 +97,7 @@ dct = Dct2d()
 
 # Quantization
 jpeg = Quantization()
-jpeg.set_quality(80)
+jpeg.set_quality(90)
 
 # Cb or Cr subsampling
 subsampling = chroma_subsampling()
@@ -122,7 +122,8 @@ try:
             # start = time.time()
             data = data.to(device)
             
-            data = ycbcr(data)
+            # using the coloring change of DiffJPEG, and take the Y channel of the image
+            data = ycbcr(data)          
             data, cb, cr = subsampling(data)
 
             cover = data[data.shape[0] // 3 * c.num_hiding_images:]
@@ -146,8 +147,8 @@ try:
             ######################
             #    quantization:   #
             ######################
-            '''coeff = jpeg(output_steg)
-            output_steg_q = jpeg.inverse(coeff)'''
+            coeff = jpeg(output_steg)
+            output_steg_q = jpeg.inverse(coeff)
             '''if i_epoch > 500:
                 output_steg_q = jpeg(output_steg)
                 output_steg_q = jpeg.inverse(output_steg_q)
