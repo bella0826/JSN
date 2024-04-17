@@ -161,7 +161,7 @@ try:
             # what if I am not using random guassian noise of output_z instead of directly using output_z
             output_z_guass = gauss_noise(output_z.shape)
 
-            output_rev = torch.cat((output_steg, output_z_guass), 1)
+            output_rev = torch.cat((output_steg_q, output_z_guass), 1)
             output_image = net(output_rev, rev=True)
 
             secret_rev = output_image.narrow(1, c.channel_dct * c.channels_in, output_image.shape[1] - c.channel_dct * c.channels_in)

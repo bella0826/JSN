@@ -56,7 +56,7 @@ IMAGE_PATH_secret_rev = IMAGE_PATH + 'secret-rev1/'
 IMAGE_PATH_backward = IMAGE_PATH + 'YCbCr/'
 
 # Load:
-suffix = 'model_quantize_6.pt'
+suffix = 'model_mul.pt'
 tain_next = False
 trained_epoch = 0
 
