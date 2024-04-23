@@ -99,7 +99,6 @@ with torch.no_grad():
         ##############
         #    JPEG:   #
         ##############
-        print(steg_img.shape)
         steg_img = steg_img * 255.0
         steg_img = steg_img.expand(-1, 3, -1, -1)
         steg_img = jpg(steg_img)
