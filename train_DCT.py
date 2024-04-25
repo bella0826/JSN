@@ -14,7 +14,7 @@ import warnings
 from dct2d import Dct2d
 import torchvision
 from Quantization import Quantization
-from Subsample import chroma_subsampling
+from Subsample import chroma_subsampling, rgb_to_ycbcr_jpeg
 import time
 
 warnings.filterwarnings("ignore")
@@ -97,10 +97,11 @@ dct = Dct2d()
 
 # Quantization
 jpeg = Quantization()
-jpeg.set_quality(80)
+jpeg.set_quality(90)
 
 # Cb or Cr subsampling
-# subsampling = chroma_subsampling()
+ycbcr = rgb_to_ycbcr_jpeg()
+subsampling = chroma_subsampling()
 
 if c.tain_next:
     load(c.MODEL_PATH + c.suffix)
@@ -120,9 +121,10 @@ try:
         for i_batch, data in enumerate(datasets.trainloader):
             # start = time.time()
             data = data.to(device)
-            #data = Variable(data, requires_grad=True).to(device, non_blocking=True)
 
-            # y, cb, data = subsampling(data)
+            # data = ycbcr(data)
+            # data = Variable(data, requires_grad=True).to(device, non_blocking=True)
+            # data, cb, cr = subsampling(data)
 
             cover = data[data.shape[0] // 2:]
             secret = data[:data.shape[0] // 2]
@@ -200,7 +202,9 @@ try:
                 for i, x in enumerate(datasets.testloader):
                     x = x.to(device)
 
-                    # y, cb, x = subsampling(x)
+                    # x = ycbcr(x)
+
+                    # x, cb, cr = subsampling(x)
 
                     cover = x[x.shape[0] // 2:, :, :, :]
                     secret = x[:x.shape[0] // 2, :, :, :]

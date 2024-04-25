@@ -7,7 +7,7 @@ import modules.Unet_common as common
 
 
 class INV_block(nn.Module):
-    def __init__(self, subnet_constructor=ResidualDenseBlock_out, clamp=c.clamp, harr=True, in_1=3, in_2=3):
+    def __init__(self, subnet_constructor=common.Res, clamp=c.clamp, harr=True, in_1=3, in_2=3):
         super().__init__()
         if harr:
             self.split_len1 = c.channel_dct #in_1 * 4

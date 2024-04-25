@@ -21,7 +21,7 @@ gamma = 0.5
 
 # Val:
 cropsize_val = 512
-batchsize_val = 3
+batchsize_val = 2
 shuffle_val = False
 val_freq = 50
 
@@ -68,4 +68,4 @@ channel_dct = 64
 blocksize_dct = 8
 
 # hiding multiple images
-num_hiding_images = 2
+num_hiding_images = 1

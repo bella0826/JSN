@@ -7,9 +7,9 @@ from natsort import natsorted
 
 
 def to_rgb(image):
-    rgb_image = Image.new("RGB", image.size)
-    rgb_image.paste(image)
-    # rgb_image = image.convert('YCbCr')
+    # rgb_image = Image.new("RGB", image.size)
+    # rgb_image.paste(image)
+    rgb_image = image.convert('YCbCr')
     return rgb_image
 
 
@@ -31,7 +31,7 @@ class Hinet_Dataset(Dataset):
         try:
             image = Image.open(self.files[index])
             image = to_rgb(image)
-            # image, cb, cr = image.split()
+            image, cb, cr = image.split()
             item = self.transform(image)
             return item
 
