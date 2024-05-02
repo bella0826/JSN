@@ -1,7 +1,7 @@
 # Super parameters
 clamp = 2.0
 channels_in = 1
-log10_lr = -5.0
+log10_lr = -5.2
 lr = 10 ** log10_lr
 epochs = 1000
 weight_decay = 1e-5
@@ -56,7 +56,7 @@ IMAGE_PATH_secret_rev = IMAGE_PATH + 'secret-rev1/'
 IMAGE_PATH_backward = IMAGE_PATH + 'YCbCr/'
 
 # Load:
-suffix = 'model_mul_1.pt'
+suffix = 'model_quantize_6.pt'
 tain_next = False
 trained_epoch = 0
 
