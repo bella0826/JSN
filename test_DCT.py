@@ -82,8 +82,8 @@ with torch.no_grad():
 
         cover = data[data.shape[0] // 2:, :, :, :]
         secret = data[:data.shape[0] // 2, :, :, :]
-        cb = cb[data.shape[0] // 2:, :, :, :]
-        cr = cr[data.shape[0] // 2:, :, :, :]
+        # cb = cb[data.shape[0] // 2:, :, :, :]
+        # cr = cr[data.shape[0] // 2:, :, :, :]
 
         cover_input = dct(cover)#[:, :1, :, :])
         secret_input = dct(secret)#[:, :1, :, :])
