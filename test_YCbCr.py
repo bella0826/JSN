@@ -155,7 +155,9 @@ with torch.no_grad():
 
         steg_img1 = steg_img1 * 255.0
         # steg_img = steg_img.expand(-1, 3, -1, -1)
-        steg_img1 = jpg(steg_img1)    
+        steg_img1 = jpg(steg_img1)
+        jpg.set_quality(50)
+        steg_img1 = jpg(steg_img1)
         # steg_img = torch.mean(steg_img, dim=1, keepdim=True)
         steg_img1 = steg_img1 / 255.0
 
@@ -210,17 +212,17 @@ with torch.no_grad():
         torchvision.utils.save_image(steg_img, c.IMAGE_PATH_steg + '%.5d.png' % i)
         torchvision.utils.save_image(secret_rev, c.IMAGE_PATH_secret_rev + '%.5d.png' % i)
 
-        cover = cover.cpu().numpy().squeeze() * 255.0
-        np.clip(cover, 0, 255)
-        steg_img = steg_img.cpu().numpy().squeeze() * 255.0
-        np.clip(steg_img, 0, 255)
-        psnr_tmp = computePSNR(cover, steg_img)
+        cover_y = cover_y.cpu().numpy().squeeze() * 255.0
+        np.clip(cover_y, 0, 255)
+        steg_img_y = steg_img_y.cpu().numpy().squeeze() * 255.0
+        np.clip(steg_img_y, 0, 255)
+        psnr_tmp = computePSNR(cover_y, steg_img_y)
         psnr_c.append(psnr_tmp)
-        secret = secret.cpu().numpy().squeeze() * 255.0
-        np.clip(secret, 0, 255)
-        secret_rev = secret_rev.cpu().numpy().squeeze() * 255.0
-        np.clip(secret_rev, 0, 255)
-        psnr_tmp_s = computePSNR(secret, secret_rev)
+        secret_y = secret_y.cpu().numpy().squeeze() * 255.0
+        np.clip(secret_y, 0, 255)
+        secret_rev_y = secret_rev_y.cpu().numpy().squeeze() * 255.0
+        np.clip(secret_rev_y, 0, 255)
+        psnr_tmp_s = computePSNR(secret_y, secret_rev_y)
         psnr_s.append(psnr_tmp_s)
         print(psnr_tmp, psnr_tmp_s)
         
