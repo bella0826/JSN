@@ -89,7 +89,7 @@ jpeg = Quantization()
 jpeg.set_quality(80)
 
 jpg = DiffJPEG(512, 512, differentiable=True)
-jpg.set_quality(90)
+jpg.set_quality(50)
 subsampling = chroma_subsampling()
 upsampling = chroma_upsampling()
 rgb = ycbcr_to_rgb_jpeg()
@@ -149,6 +149,7 @@ with torch.no_grad():
         ##############
         #    JPEG:   #
         ##############
+        compare = steg_img_y
         steg_img = upsampling(steg_img_y, steg_img_cb, steg_img_cr)
         # steg_img = rgb(steg_img)
         steg_img1 = rgb(steg_img)
@@ -156,14 +157,14 @@ with torch.no_grad():
         steg_img1 = steg_img1 * 255.0
         # steg_img = steg_img.expand(-1, 3, -1, -1)
         steg_img1 = jpg(steg_img1)
-        jpg.set_quality(50)
-        steg_img1 = jpg(steg_img1)
+        # jpg.set_quality(50)
+        # steg_img1 = jpg(steg_img1)
         # steg_img = torch.mean(steg_img, dim=1, keepdim=True)
         steg_img1 = steg_img1 / 255.0
 
         steg_img1 = ycbcr(steg_img1)
         steg_img_y, steg_img_cb, steg_img_cr = subsampling(steg_img1)
-        steg_img = rgb(steg_img1)    # for saving as rgb image
+        steg_img1 = rgb(steg_img1)    # for saving as rgb image
 
         #####################
         #   quantization:   #
@@ -206,17 +207,18 @@ with torch.no_grad():
         cover = rgb(cover)
         secret = rgb(secret)
         secret_rev = rgb(secret_rev)
+        steg_img = rgb(steg_img)
 
-        torchvision.utils.save_image(cover, c.IMAGE_PATH_cover + '%.5d.png' % i)
+        torchvision.utils.save_image(steg_img, c.IMAGE_PATH_cover + '%.5d.png' % i)
         torchvision.utils.save_image(secret, c.IMAGE_PATH_secret + '%.5d.png' % i)
-        torchvision.utils.save_image(steg_img, c.IMAGE_PATH_steg + '%.5d.png' % i)
+        torchvision.utils.save_image(steg_img1, c.IMAGE_PATH_steg + '%.5d.png' % i)
         torchvision.utils.save_image(secret_rev, c.IMAGE_PATH_secret_rev + '%.5d.png' % i)
 
-        cover_y = cover_y.cpu().numpy().squeeze() * 255.0
-        np.clip(cover_y, 0, 255)
+        compare = compare.cpu().numpy().squeeze() * 255.0
+        np.clip(compare, 0, 255)
         steg_img_y = steg_img_y.cpu().numpy().squeeze() * 255.0
         np.clip(steg_img_y, 0, 255)
-        psnr_tmp = computePSNR(cover_y, steg_img_y)
+        psnr_tmp = computePSNR(compare, steg_img_y)
         psnr_c.append(psnr_tmp)
         secret_y = secret_y.cpu().numpy().squeeze() * 255.0
         np.clip(secret_y, 0, 255)
