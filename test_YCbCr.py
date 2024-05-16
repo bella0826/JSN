@@ -2,6 +2,7 @@ import math
 import cv2
 import torch
 import torch.nn
+import torch.nn.functional as F
 import torch.optim
 import torchvision
 import numpy as np
@@ -89,7 +90,7 @@ jpeg = Quantization()
 jpeg.set_quality(80)
 
 jpg = DiffJPEG(512, 512, differentiable=True)
-jpg.set_quality(50)
+jpg.set_quality(90)
 subsampling = chroma_subsampling()
 upsampling = chroma_upsampling()
 rgb = ycbcr_to_rgb_jpeg()
@@ -149,7 +150,6 @@ with torch.no_grad():
         ##############
         #    JPEG:   #
         ##############
-        compare = steg_img_y
         steg_img = upsampling(steg_img_y, steg_img_cb, steg_img_cr)
         # steg_img = rgb(steg_img)
         steg_img1 = rgb(steg_img)
@@ -164,7 +164,23 @@ with torch.no_grad():
 
         steg_img1 = ycbcr(steg_img1)
         steg_img_y, steg_img_cb, steg_img_cr = subsampling(steg_img1)
-        steg_img1 = rgb(steg_img1)    # for saving as rgb image
+        steg_img = rgb(steg_img1)    # for saving as rgb image
+
+        ##################
+        #   filtering:   #
+        ##################
+
+        '''steg_img = upsampling(steg_img_y, steg_img_cb, steg_img_cr)
+        # steg_img = rgb(steg_img)
+
+        # print(steg_img.shape)
+        steg_img_output = F.interpolate(steg_img, size=(500, 500), mode='bilinear', align_corners=False)
+        print(steg_img_output.shape)
+        steg_img1 = F.interpolate(steg_img_output, size=(512, 512), mode='bilinear', align_corners=False)
+        
+        # steg_img1 = ycbcr(steg_img1)
+        steg_img_y, steg_img_cb, steg_img_cr = subsampling(steg_img1)
+        steg_img = rgb(steg_img1)'''
 
         #####################
         #   quantization:   #
@@ -207,18 +223,18 @@ with torch.no_grad():
         cover = rgb(cover)
         secret = rgb(secret)
         secret_rev = rgb(secret_rev)
-        steg_img = rgb(steg_img)
+        # steg_img = rgb(steg_img)
 
-        torchvision.utils.save_image(steg_img, c.IMAGE_PATH_cover + '%.5d.png' % i)
+        torchvision.utils.save_image(cover, c.IMAGE_PATH_cover + '%.5d.png' % i)
         torchvision.utils.save_image(secret, c.IMAGE_PATH_secret + '%.5d.png' % i)
-        torchvision.utils.save_image(steg_img1, c.IMAGE_PATH_steg + '%.5d.png' % i)
+        torchvision.utils.save_image(steg_img, c.IMAGE_PATH_steg + '%.5d.png' % i)
         torchvision.utils.save_image(secret_rev, c.IMAGE_PATH_secret_rev + '%.5d.png' % i)
 
-        compare = compare.cpu().numpy().squeeze() * 255.0
-        np.clip(compare, 0, 255)
+        cover_y = cover_y.cpu().numpy().squeeze() * 255.0
+        np.clip(cover_y, 0, 255)
         steg_img_y = steg_img_y.cpu().numpy().squeeze() * 255.0
         np.clip(steg_img_y, 0, 255)
-        psnr_tmp = computePSNR(compare, steg_img_y)
+        psnr_tmp = computePSNR(cover_y, steg_img_y)
         psnr_c.append(psnr_tmp)
         secret_y = secret_y.cpu().numpy().squeeze() * 255.0
         np.clip(secret_y, 0, 255)
