@@ -99,6 +99,7 @@ ycbcr = rgb_to_ycbcr_jpeg()
 with torch.no_grad():
     psnr_c = []
     psnr_s = []
+    psnr_cc = []
     for i, data in enumerate(datasets.testloader):
         data = data.to(device)          #first channel(batch size) = 2
 
@@ -174,13 +175,43 @@ with torch.no_grad():
         # steg_img = rgb(steg_img)
 
         # print(steg_img.shape)
-        steg_img_output = F.interpolate(steg_img, size=(500, 500), mode='bilinear', align_corners=False)
-        print(steg_img_output.shape)
+        steg_img_output = F.interpolate(steg_img, size=(256, 256), mode='bilinear', align_corners=False)
+        # print(steg_img_output.shape)
         steg_img1 = F.interpolate(steg_img_output, size=(512, 512), mode='bilinear', align_corners=False)
         
         # steg_img1 = ycbcr(steg_img1)
         steg_img_y, steg_img_cb, steg_img_cr = subsampling(steg_img1)
         steg_img = rgb(steg_img1)'''
+
+        ####################
+        #   centor crop:   #
+        ####################
+        '''steg_img = upsampling(steg_img_y, steg_img_cb, steg_img_cr)
+        steg_img1 = rgb(steg_img)
+
+        crop_height = 200
+        crop_width = 200
+
+        start_height = (steg_img.size(2) - crop_height) // 2
+        start_width = (steg_img.size(3) - crop_width) // 2
+
+        # if i == 0:
+        crop_tensor = steg_img1[:, :, start_height:start_height + crop_height, start_width:start_width + crop_width]
+        cover_y = cover_y[:, :, start_height:start_height + crop_height, start_width:start_width + crop_width]
+        secret_y = secret_y[:, :, start_height:start_height + crop_height, start_width:start_width + crop_width]
+        padding_top = start_height
+        padding_bottom = steg_img.size(2) - (start_height + crop_height)
+        padding_left = start_width
+        padding_right = steg_img.size(3) - (start_width + crop_width)
+        steg_img1 = F.pad(crop_tensor, (padding_left, padding_right, padding_top, padding_bottom))
+        cover_y = F.pad(cover_y, (padding_left, padding_right, padding_top, padding_bottom))
+        secret_y = F.pad(secret_y, (padding_left, padding_right, padding_top, padding_bottom))
+        # torchvision.utils.save_image(padding_tensor, './output.png')
+        steg_img1[:, :, start_height:start_height + crop_height, start_width:start_width + crop_width] = 0
+        cover_y[:, :, start_height:start_height + crop_height, start_width:start_width + crop_width] = 0
+        secret_y[:, :, start_height:start_height + crop_height, start_width:start_width + crop_width] = 0
+        steg_img1 = ycbcr(steg_img1)
+        steg_img_y, steg_img_cb, steg_img_cr = subsampling(steg_img1)'''
 
         #####################
         #   quantization:   #
@@ -223,12 +254,16 @@ with torch.no_grad():
         cover = rgb(cover)
         secret = rgb(secret)
         secret_rev = rgb(secret_rev)
-        # steg_img = rgb(steg_img)
+        steg_img1 = rgb(steg_img1)
+
+        cover_rev = upsampling(cover_rev_y, cover_rev_cb, cover_rev_cr)
+        cover_rev = rgb(cover_rev)
 
         torchvision.utils.save_image(cover, c.IMAGE_PATH_cover + '%.5d.png' % i)
         torchvision.utils.save_image(secret, c.IMAGE_PATH_secret + '%.5d.png' % i)
-        torchvision.utils.save_image(steg_img, c.IMAGE_PATH_steg + '%.5d.png' % i)
+        torchvision.utils.save_image(steg_img1, c.IMAGE_PATH_steg + '%.5d.png' % i)
         torchvision.utils.save_image(secret_rev, c.IMAGE_PATH_secret_rev + '%.5d.png' % i)
+        torchvision.utils.save_image(cover_rev, c.IMAGE_PATH_backward + '%.5d.png' % i)
 
         cover_y = cover_y.cpu().numpy().squeeze() * 255.0
         np.clip(cover_y, 0, 255)
@@ -236,15 +271,21 @@ with torch.no_grad():
         np.clip(steg_img_y, 0, 255)
         psnr_tmp = computePSNR(cover_y, steg_img_y)
         psnr_c.append(psnr_tmp)
+
+        cover_rev_y = cover_rev_y.cpu().numpy().squeeze() * 255.0
+        np.clip(cover_rev_y, 0, 255)
+        psnr_tmp_1 = computePSNR(cover_y, cover_rev_y)
+        psnr_cc.append(psnr_tmp_1)
+
         secret_y = secret_y.cpu().numpy().squeeze() * 255.0
         np.clip(secret_y, 0, 255)
         secret_rev_y = secret_rev_y.cpu().numpy().squeeze() * 255.0
         np.clip(secret_rev_y, 0, 255)
         psnr_tmp_s = computePSNR(secret_y, secret_rev_y)
         psnr_s.append(psnr_tmp_s)
-        print(psnr_tmp, psnr_tmp_s)
+        print(psnr_tmp, psnr_tmp_s, psnr_tmp_1)
         
         
-    print(np.mean(psnr_c), np.mean(psnr_s))
+    print(np.mean(psnr_c), np.mean(psnr_s), np.mean(psnr_cc))
 
 

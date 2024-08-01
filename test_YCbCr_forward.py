@@ -159,7 +159,7 @@ with torch.no_grad():
 
         steg_img1 = ycbcr(steg_img1)
         steg_img_y, steg_img_cb, steg_img_cr = subsampling(steg_img1)
-        steg_img = rgb(steg_img1)    # for saving as rgb image
+        steg_img = rgb(steg_img1)    # for saving as rgb image'''
 
         #####################
         #   quantization:   #

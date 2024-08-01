@@ -97,7 +97,7 @@ dct = Dct2d()
 
 # Quantization
 jpeg = Quantization()
-jpeg.set_quality(90)
+jpeg.set_quality(95)
 
 # Cb or Cr subsampling
 ycbcr = rgb_to_ycbcr_jpeg()

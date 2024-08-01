@@ -1,9 +1,9 @@
 # Super parameters
 clamp = 2.0
 channels_in = 1
-log10_lr = -5.2
+log10_lr = -5.0
 lr = 10 ** log10_lr
-epochs = 1000
+epochs = 2000
 weight_decay = 1e-5
 init_scale = 0.01
 
@@ -29,7 +29,7 @@ val_freq = 50
 # Dataset
 TRAIN_PATH = '/home/han/DIV2K_train_HR/DIV2K_train_HR/'
 VAL_PATH = '/home/han/DIV2K_valid_HR/DIV2K_valid_HR/'
-BACKWARD_PATH = '/home/han/HiNET/image/YCbCr/'
+BACKWARD_PATH = '/home/han/HiNET/image/steg1/'
 format_train = 'png'
 format_val = 'png'
 format_backward = 'png'

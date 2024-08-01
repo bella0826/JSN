@@ -12,7 +12,7 @@ import modules.Unet_common as common
 from dct2d import Dct2d
 from Quantization import Quantization
 from DiffJPEG import DiffJPEG
-from Subsample import chroma_subsampling, rgb_to_ycbcr_jpeg
+from Subsample import chroma_subsampling, rgb_to_ycbcr_jpeg, ycbcr_to_rgb_jpeg, chroma_upsampling
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -67,6 +67,8 @@ jpg = DiffJPEG(512, 512, differentiable=True)
 jpg.set_quality(90)
 subsampling = chroma_subsampling()
 ycbcr = rgb_to_ycbcr_jpeg()
+rgb = ycbcr_to_rgb_jpeg()
+upsampling = chroma_upsampling()
 
 with torch.no_grad():
     psnr_c = []
@@ -79,6 +81,12 @@ with torch.no_grad():
 
         cover = data[data.shape[0] // 3 * c.num_hiding_images:, :, :, :]
         secret = data[:data.shape[0] // 3 * c.num_hiding_images, :, :, :]
+
+        cover_cb = cb[data.shape[0] // 3 * c.num_hiding_images:, :, :, :]
+        secret_cb = cb[:data.shape[0] // 3 * c.num_hiding_images, :, :, :]
+
+        cover_cr = cr[data.shape[0] // 3 * c.num_hiding_images:, :, :, :]
+        secret_cr = cr[:data.shape[0] // 3 * c.num_hiding_images, :, :, :]
 
         cover_input = dct(cover)#[:, :1, :, :])
         secret_input = dct(secret)#[:, :1, :, :])
@@ -99,11 +107,11 @@ with torch.no_grad():
         ##############
         #    JPEG:   #
         ##############
-        steg_img = steg_img * 255.0
+        '''steg_img = steg_img * 255.0
         steg_img = steg_img.expand(-1, 3, -1, -1)
         steg_img = jpg(steg_img)
         steg_img = torch.mean(steg_img, dim=1, keepdim=True)
-        steg_img = steg_img / 255.0
+        steg_img = steg_img / 255.0'''
         # the jpeged steg_img is saved below
 
         #####################
@@ -129,23 +137,38 @@ with torch.no_grad():
 
         #steg_img = torch.cat((steg_img, cover[:, 1:, :, :]), dim=1)
         #secret_rev = torch.cat((secret_rev, secret[:, 1:, :, :]), dim=1)
+        cover_y = cover
+        cover = upsampling(cover, cover_cb, cover_cr)
+        cover = rgb(cover)
+
+        secret_y = secret
+        secret = upsampling(secret, secret_cb, secret_cr)
+        secret = rgb(secret)
+
+        steg_img_y = steg_img
+        steg_img = upsampling(steg_img, cover_cb, cover_cr)
+        steg_img = rgb(steg_img)
+
+        secret_rev_y = secret_rev
+        secret_rev = upsampling(secret_rev, secret_cb, secret_cr)
+        secret_rev = rgb(secret_rev)
 
         torchvision.utils.save_image(cover, c.IMAGE_PATH_cover + '%.5d.png' % i)
         torchvision.utils.save_image(secret, c.IMAGE_PATH_secret + '%.5d.png' % i)
         torchvision.utils.save_image(steg_img, c.IMAGE_PATH_steg + '%.5d.png' % i)
         torchvision.utils.save_image(secret_rev, c.IMAGE_PATH_secret_rev + '%.5d.png' % i)
 
-        cover = cover.cpu().numpy().squeeze() * 255.0
-        np.clip(cover, 0, 255)
-        steg_img = steg_img.cpu().numpy().squeeze() * 255.0
-        np.clip(steg_img, 0, 255)
-        psnr_tmp = computePSNR(cover, steg_img)
+        cover_y = cover_y.cpu().numpy().squeeze() * 255.0
+        np.clip(cover_y, 0, 255)
+        steg_img_y = steg_img_y.cpu().numpy().squeeze() * 255.0
+        np.clip(steg_img_y, 0, 255)
+        psnr_tmp = computePSNR(cover_y, steg_img_y)
         psnr_c.append(psnr_tmp)
-        secret = secret.cpu().numpy().squeeze() * 255.0
-        np.clip(secret, 0, 255)
-        secret_rev = secret_rev.cpu().numpy().squeeze() * 255.0
-        np.clip(secret_rev, 0, 255)
-        psnr_tmp_s = computePSNR(secret, secret_rev)
+        secret_y = secret_y.cpu().numpy().squeeze() * 255.0
+        np.clip(secret_y, 0, 255)
+        secret_rev_y = secret_rev_y.cpu().numpy().squeeze() * 255.0
+        np.clip(secret_rev_y, 0, 255)
+        psnr_tmp_s = computePSNR(secret_y, secret_rev_y)
         psnr_s.append(psnr_tmp_s)
         
         print(psnr_tmp, psnr_tmp_s)

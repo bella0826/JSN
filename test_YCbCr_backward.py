@@ -215,7 +215,7 @@ with torch.no_grad():
         # torchvision.utils.save_image(cover, c.IMAGE_PATH_cover + '%.5d.png' % i)
         # torchvision.utils.save_image(secret, c.IMAGE_PATH_secret + '%.5d.png' % i)
         # torchvision.utils.save_image(steg_img, c.IMAGE_PATH_steg + '%.5d.png' % i)
-        torchvision.utils.save_image(secret_rev, c.IMAGE_PATH_secret_rev + '%.5d.png' % i)
+        torchvision.utils.save_image(secret_rev, c.IMAGE_PATH_backward + '%.5d.png' % i)
 
         '''cover = cover.cpu().numpy().squeeze() * 255.0
         np.clip(cover, 0, 255)

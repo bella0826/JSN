@@ -63,7 +63,7 @@ dct = Dct2d()
 jpeg = Quantization()
 jpeg.set_quality(90)
 
-jpg = DiffJPEG(512, 512, differentiable=False)
+jpg = DiffJPEG(256, 256, differentiable=False)
 jpg.set_quality(80)
 
 subsampling = chroma_subsampling()
@@ -82,8 +82,8 @@ with torch.no_grad():
 
         cover = data[data.shape[0] // 2:, :, :, :]
         secret = data[:data.shape[0] // 2, :, :, :]
-        # cb = cb[data.shape[0] // 2:, :, :, :]
-        # cr = cr[data.shape[0] // 2:, :, :, :]
+        cb = cb[data.shape[0] // 2:, :, :, :]
+        cr = cr[data.shape[0] // 2:, :, :, :]
 
         cover_input = dct(cover)#[:, :1, :, :])
         secret_input = dct(secret)#[:, :1, :, :])
@@ -102,18 +102,18 @@ with torch.no_grad():
         #    JPEG:   #
         ##############
         
-        '''steg_img = upsampling(steg_img, cb, cr)
-        steg_img = rgb(steg_img)
+        # steg_img = upsampling(steg_img, cb, cr)
+        # steg_img = rgb(steg_img)
 
         steg_img = steg_img * 255.0
-        # steg_img = steg_img.expand(-1, 3, -1, -1)
+        steg_img = steg_img.expand(-1, 3, -1, -1)
         steg_img = jpg(steg_img)
         
         steg_img = steg_img / 255.0
         
-        steg_img = ycbcr(steg_img)
-        steg_img, cb, cr = subsampling(steg_img)'''
-        # steg_img = torch.mean(steg_img, dim=1, keepdim=True)
+        # steg_img = ycbcr(steg_img)
+        # steg_img, cb, cr = subsampling(steg_img)
+        steg_img = torch.mean(steg_img, dim=1, keepdim=True)
         
         # the jpeged steg_img is saved below
 

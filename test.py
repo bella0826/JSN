@@ -59,7 +59,7 @@ net.eval()
 dwt = common.DWT()
 iwt = common.IWT()
 jpg = DiffJPEG(512, 512, differentiable=True)
-jpg.set_quality(90)
+jpg.set_quality(50)
 
 with torch.no_grad():
     psnr_c = []
@@ -80,12 +80,15 @@ with torch.no_grad():
         output_z = output.narrow(1, 4 * c.channels_in, output.shape[1] - 4 * c.channels_in)
         steg_img = iwt(output_steg)
         backward_z = gauss_noise(output_z.shape)
-        
-        '''steg_img1 = steg_img * 255.0
+
+        #############
+        #   JPEG:   #
+        #############
+        steg_img1 = steg_img * 255.0
         # steg_img = steg_img.expand(-1, 3, -1, -1)
         steg_img1 = jpg(steg_img1)
         #steg_img = torch.mean(steg_img, dim=1, keepdim=True)
-        steg_img1 = steg_img1 / 255.0'''
+        steg_img = steg_img1 / 255.0
 
         #################
         #   backward:   #
