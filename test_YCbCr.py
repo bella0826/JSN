@@ -90,7 +90,7 @@ jpeg = Quantization()
 jpeg.set_quality(80)
 
 jpg = DiffJPEG(512, 512, differentiable=True)
-jpg.set_quality(90)
+jpg.set_quality(50)
 subsampling = chroma_subsampling()
 upsampling = chroma_upsampling()
 rgb = ycbcr_to_rgb_jpeg()
